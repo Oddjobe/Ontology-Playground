@@ -50,7 +50,7 @@ function App() {
       />
       <QuestPanel />
       <OntologyGraph />
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div className="right-sidebar">
         <SearchFilter />
         <InspectorPanel />
         <QueryPlayground />
