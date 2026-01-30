@@ -35,6 +35,18 @@ export function OntologyGraph() {
     advanceQuestStep,
     darkMode
   } = useAppStore();
+
+  // Use refs for quest state to avoid re-creating the graph when quest changes
+  const activeQuestRef = useRef(activeQuest);
+  const currentStepIndexRef = useRef(currentStepIndex);
+  const advanceQuestStepRef = useRef(advanceQuestStep);
+  
+  // Keep refs in sync
+  useEffect(() => {
+    activeQuestRef.current = activeQuest;
+    currentStepIndexRef.current = currentStepIndex;
+    advanceQuestStepRef.current = advanceQuestStep;
+  }, [activeQuest, currentStepIndex, advanceQuestStep]);
   
   // Theme-aware colors - memoized to prevent unnecessary re-renders
   const themeColors = useMemo(() => darkMode 
@@ -204,11 +216,13 @@ export function OntologyGraph() {
       const nodeId = evt.target.id();
       selectEntity(nodeId);
       
-      // Check if this advances a quest step
-      if (activeQuest) {
-        const currentStep = activeQuest.steps[currentStepIndex];
+      // Check if this advances a quest step (use refs to avoid re-creating graph)
+      const quest = activeQuestRef.current;
+      const stepIndex = currentStepIndexRef.current;
+      if (quest) {
+        const currentStep = quest.steps[stepIndex];
         if (currentStep.targetType === 'entity' && currentStep.targetId === nodeId) {
-          advanceQuestStep();
+          advanceQuestStepRef.current();
         }
       }
     });
@@ -217,11 +231,13 @@ export function OntologyGraph() {
       const edgeId = evt.target.id();
       selectRelationship(edgeId);
       
-      // Check if this advances a quest step
-      if (activeQuest) {
-        const currentStep = activeQuest.steps[currentStepIndex];
+      // Check if this advances a quest step (use refs to avoid re-creating graph)
+      const quest = activeQuestRef.current;
+      const stepIndex = currentStepIndexRef.current;
+      if (quest) {
+        const currentStep = quest.steps[stepIndex];
         if (currentStep.targetType === 'relationship' && currentStep.targetId === edgeId) {
-          advanceQuestStep();
+          advanceQuestStepRef.current();
         }
       }
     });
@@ -241,7 +257,7 @@ export function OntologyGraph() {
       cy.destroy();
       cyRef.current = null;
     };
-  }, [buildElements, selectEntity, selectRelationship, activeQuest, currentStepIndex, advanceQuestStep]);
+  }, [buildElements, selectEntity, selectRelationship]);
 
   // Update graph colors when theme changes (without recreating graph)
   useEffect(() => {
