@@ -6,7 +6,7 @@ interface HeaderProps {
   onDataSourcesClick: () => void;
   onImportExportClick: () => void;
   onGalleryClick: () => void;
-  onNLBuilderClick: () => void;
+  onNLBuilderClick?: () => void;
   onSummaryClick: () => void;
 }
 
@@ -47,9 +47,11 @@ export function Header({ onHelpClick, onDataSourcesClick, onImportExportClick, o
           <FileText size={16} />
           <span>Summary</span>
         </button>
-        <button className="icon-btn" onClick={onNLBuilderClick} title="Build from Description">
-          <Sparkles size={20} />
-        </button>
+        {onNLBuilderClick && (
+          <button className="icon-btn" onClick={onNLBuilderClick} title="Build from Description">
+            <Sparkles size={20} />
+          </button>
+        )}
         <button className="icon-btn" onClick={onGalleryClick} title="Ontology Gallery">
           <LayoutGrid size={20} />
         </button>

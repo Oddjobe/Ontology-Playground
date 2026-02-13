@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { 
   Header, 
@@ -12,12 +12,17 @@ import {
   DataSourcesModal,
   ImportExportModal,
   GalleryModal,
-  NLBuilderModal,
   OntologySummaryModal,
   Toast
 } from './components';
 import { useAppStore } from './store/appStore';
 import './styles/app.css';
+
+const AI_BUILDER_ENABLED = import.meta.env.VITE_ENABLE_AI_BUILDER === 'true';
+
+const NLBuilderModal = AI_BUILDER_ENABLED
+  ? lazy(() => import('./components/NLBuilderModal').then(m => ({ default: m.NLBuilderModal })))
+  : null;
 
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
@@ -51,7 +56,7 @@ function App() {
         onDataSourcesClick={() => setShowDataSources(true)}
         onImportExportClick={() => setShowImportExport(true)}
         onGalleryClick={() => setShowGallery(true)}
-        onNLBuilderClick={() => setShowNLBuilder(true)}
+        onNLBuilderClick={AI_BUILDER_ENABLED ? () => setShowNLBuilder(true) : undefined}
         onSummaryClick={() => setShowSummary(true)}
       />
       <QuestPanel />
@@ -82,9 +87,15 @@ function App() {
         {showGallery && <GalleryModal onClose={() => setShowGallery(false)} />}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showNLBuilder && <NLBuilderModal onClose={() => setShowNLBuilder(false)} />}
-      </AnimatePresence>
+      {AI_BUILDER_ENABLED && NLBuilderModal && (
+        <AnimatePresence>
+          {showNLBuilder && (
+            <Suspense fallback={null}>
+              <NLBuilderModal onClose={() => setShowNLBuilder(false)} />
+            </Suspense>
+          )}
+        </AnimatePresence>
+      )}
 
       <AnimatePresence>
         {showSummary && <OntologySummaryModal onClose={() => setShowSummary(false)} />}

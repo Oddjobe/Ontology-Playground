@@ -9,6 +9,7 @@ export { HelpModal } from './HelpModal';
 export { DataSourcesModal } from './DataSourcesModal';
 export { ImportExportModal } from './ImportExportModal';
 export { GalleryModal } from './GalleryModal';
-export { NLBuilderModal } from './NLBuilderModal';
+// NLBuilderModal is not exported here — it is dynamically imported in App.tsx
+// only when the VITE_ENABLE_AI_BUILDER feature flag is enabled.
 export { OntologySummaryModal } from './OntologySummaryModal';
 export { Toast } from './Toast';
