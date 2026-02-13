@@ -1,0 +1,38 @@
+import type { Ontology, DataBinding } from '../data/ontology';
+
+export interface CatalogueEntry {
+  id: string;
+  name: string;
+  description: string;
+  icon?: string;
+  category: string;
+  tags: string[];
+  author: string;
+  source: 'official' | 'community';
+  ontology: Ontology;
+  bindings: DataBinding[];
+}
+
+export interface Catalogue {
+  generatedAt: string;
+  count: number;
+  entries: CatalogueEntry[];
+}
+
+export const CATEGORY_LABELS: Record<string, string> = {
+  retail: 'Retail',
+  healthcare: 'Healthcare',
+  finance: 'Finance',
+  manufacturing: 'Manufacturing',
+  education: 'Education',
+  general: 'General',
+};
+
+export const CATEGORY_COLORS: Record<string, string> = {
+  retail: '#0078D4',
+  healthcare: '#D13438',
+  finance: '#107C10',
+  manufacturing: '#FFB900',
+  education: '#8764B8',
+  general: '#6B7280',
+};

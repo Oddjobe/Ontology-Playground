@@ -11,7 +11,7 @@ import { join, basename, dirname } from 'node:path';
 import { JSDOM } from 'jsdom';
 import { parseRDF } from '../src/lib/rdf/parser.js';
 import { serializeToRDF } from '../src/lib/rdf/serializer.js';
-import type { Ontology, DataBinding } from '../src/data/ontology.js';
+import type { CatalogueEntry, Catalogue } from '../src/types/catalogue.js';
 
 // Provide DOMParser for the RDF parser (browser API not available in Node)
 const dom = new JSDOM('');
@@ -20,7 +20,6 @@ globalThis.DOMParser = dom.window.DOMParser;
 const ROOT = join(import.meta.dirname, '..');
 const CATALOGUE_DIR = join(ROOT, 'catalogue');
 const OUTPUT_PATH = join(ROOT, 'public', 'catalogue.json');
-const SCHEMA_PATH = join(CATALOGUE_DIR, 'metadata-schema.json');
 
 // ------------------------------------------------------------------
 // Types
@@ -34,25 +33,6 @@ interface CatalogueMetadata {
   category: string;
   tags?: string[];
   author?: string;
-}
-
-export interface CatalogueEntry {
-  id: string;
-  name: string;
-  description: string;
-  icon?: string;
-  category: string;
-  tags: string[];
-  author: string;
-  source: 'official' | 'community';
-  ontology: Ontology;
-  bindings: DataBinding[];
-}
-
-interface CatalogueOutput {
-  generatedAt: string;
-  count: number;
-  entries: CatalogueEntry[];
 }
 
 // ------------------------------------------------------------------
@@ -100,7 +80,7 @@ function discoverOntologyDirs(baseDir: string): string[] {
 // Main
 // ------------------------------------------------------------------
 
-function compile(): CatalogueOutput {
+function compile(): Catalogue {
   const entries: CatalogueEntry[] = [];
   const seenIds = new Set<string>();
   let errors = 0;

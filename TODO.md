@@ -128,19 +128,19 @@ into a static JSON file.
   helpful error message
 
 ### 3.3 Community contribution workflow (Microsoft OSS conventions)
-- [ ] Add `LICENSE` file — **MIT License** (standard for Microsoft OSS projects)
-- [ ] Add `CONTRIBUTING.md` following the
+- [x] Add `LICENSE` file — **MIT License** (standard for Microsoft OSS projects)
+- [x] Add `CONTRIBUTING.md` following the
   [Microsoft Open Source Contributing Guide](https://opensource.microsoft.com/contributing/):
   - Contributor License Agreement (CLA) requirement — add the
     [Microsoft CLA bot](https://cla.opensource.microsoft.com/) to the repo
   - Fork → add RDF + `metadata.json` under `catalogue/community/<username>/`
   - Open PR → CI validates the RDF and metadata schema
   - On merge, the next build includes the new ontology
-- [ ] Add `CODE_OF_CONDUCT.md` — use the
+- [x] Add `CODE_OF_CONDUCT.md` — use the
   [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/)
-- [ ] Add `SECURITY.md` — use the
+- [x] Add `SECURITY.md` — use the
   [Microsoft Security Policy template](https://github.com/microsoft/repo-templates/blob/main/shared/SECURITY.md)
-- [ ] Add a GitHub Actions CI job that validates PRs touching `catalogue/`:
+- [x] Add a GitHub Actions CI job that validates PRs touching `catalogue/`:
   - Parse RDF, verify round-trip, check metadata schema
   - Run the full test suite
 - [ ] Consider also accepting GitHub Gist URLs in `metadata.json`
@@ -148,13 +148,13 @@ into a static JSON file.
   (optional, evaluate complexity vs. value)
 
 ### 3.4 Catalogue UI (upgrade GalleryModal)
-- [ ] Refactor `GalleryModal` to load from `catalogue.json` instead of
+- [x] Refactor `GalleryModal` to load from `catalogue.json` instead of
   hardcoded `sampleOntologies.ts`
-- [ ] Add category filters: Official / Community, plus domain tags (retail,
+- [x] Add category filters: Official / Community, plus domain tags (retail,
   healthcare, etc.)
-- [ ] Add search/filter by name, author, tags
-- [ ] Show author + contributor info for community ontologies
-- [ ] Add "View RDF source" button for each ontology (links to the raw file
+- [x] Add search/filter by name, author, tags
+- [x] Show author + contributor info for community ontologies
+- [x] Add "View RDF source" button for each ontology (links to the raw file
   in the repo or displays inline)
 - [ ] Add pagination or virtual scroll if the catalogue grows large
 

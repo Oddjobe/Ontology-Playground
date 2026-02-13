@@ -1,18 +1,80 @@
-import { motion } from 'framer-motion';
-import { X, Layers, ArrowRight } from 'lucide-react';
-import { sampleOntologies, categoryColors } from '../data/sampleOntologies';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Layers, ArrowRight, Search, Code, User } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
+import { serializeToRDF } from '../lib/rdf/serializer';
+import type { CatalogueEntry, Catalogue } from '../types/catalogue';
+import { CATEGORY_COLORS, CATEGORY_LABELS } from '../types/catalogue';
 
 interface GalleryModalProps {
   onClose: () => void;
 }
 
+type SourceFilter = 'all' | 'official' | 'community';
+
 export function GalleryModal({ onClose }: GalleryModalProps) {
   const { currentOntology, loadOntology } = useAppStore();
 
-  const handleLoadOntology = (entry: typeof sampleOntologies[0]) => {
+  const [catalogue, setCatalogue] = useState<CatalogueEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [rdfViewId, setRdfViewId] = useState<string | null>(null);
+
+  // Load catalogue.json
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}catalogue.json`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load catalogue (${res.status})`);
+        return res.json() as Promise<Catalogue>;
+      })
+      .then((data) => {
+        setCatalogue(data.entries);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  // Derive available categories from loaded data
+  const categories = useMemo(() => {
+    const cats = new Set(catalogue.map((e) => e.category));
+    return Array.from(cats).sort();
+  }, [catalogue]);
+
+  // Filter + search
+  const filtered = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return catalogue.filter((entry) => {
+      if (sourceFilter !== 'all' && entry.source !== sourceFilter) return false;
+      if (categoryFilter !== 'all' && entry.category !== categoryFilter) return false;
+      if (q) {
+        const haystack = [
+          entry.name,
+          entry.description,
+          entry.author,
+          ...entry.tags,
+        ]
+          .join(' ')
+          .toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [catalogue, searchQuery, sourceFilter, categoryFilter]);
+
+  const handleLoadOntology = (entry: CatalogueEntry) => {
     loadOntology(entry.ontology, entry.bindings);
     onClose();
+  };
+
+  const handleViewRdf = (entry: CatalogueEntry) => {
+    setRdfViewId(rdfViewId === entry.id ? null : entry.id);
   };
 
   return (
@@ -29,13 +91,14 @@ export function GalleryModal({ onClose }: GalleryModalProps) {
         animate={{ scale: 1, y: 0 }}
         transition={{ type: 'spring', damping: 20 }}
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: 800, maxHeight: '85vh', overflow: 'auto' }}
+        style={{ maxWidth: 900, maxHeight: '85vh', overflow: 'auto' }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
             <h2 style={{ fontSize: 24, fontWeight: 600 }}>Ontology Gallery</h2>
             <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
-              Pre-built ontologies for common business domains
+              Browse and load ontologies from the catalogue
             </p>
           </div>
           <button className="icon-btn" onClick={onClose}>
@@ -43,128 +106,305 @@ export function GalleryModal({ onClose }: GalleryModalProps) {
           </button>
         </div>
 
-        {/* Gallery Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
-          {sampleOntologies.map((entry) => {
-            const isActive = currentOntology.name === entry.ontology.name;
-            const categoryColor = categoryColors[entry.category];
-            
-            return (
-              <motion.div
-                key={entry.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                style={{
-                  padding: 20,
-                  background: isActive 
-                    ? 'linear-gradient(135deg, rgba(0, 120, 212, 0.15), rgba(0, 120, 212, 0.05))'
-                    : 'var(--bg-tertiary)',
-                  borderRadius: 'var(--radius-lg)',
-                  border: isActive ? '2px solid var(--ms-blue)' : '2px solid transparent',
-                  cursor: isActive ? 'default' : 'pointer',
-                  transition: 'border-color 0.2s, background 0.2s'
-                }}
-                onClick={() => !isActive && handleLoadOntology(entry)}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{
-                      width: 48,
-                      height: 48,
-                      background: `${categoryColor}20`,
-                      borderRadius: 'var(--radius-md)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 24
-                    }}>
-                      {entry.icon}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 16, fontWeight: 600 }}>{entry.name}</div>
-                      <div style={{ 
-                        fontSize: 11, 
-                        color: categoryColor,
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
-                      }}>
-                        {entry.category}
-                      </div>
-                    </div>
-                  </div>
-                  {isActive && (
-                    <div style={{
-                      padding: '4px 8px',
-                      background: 'var(--ms-blue)',
-                      color: 'white',
-                      borderRadius: 'var(--radius-sm)',
-                      fontSize: 11,
-                      fontWeight: 600
-                    }}>
-                      Active
-                    </div>
-                  )}
-                </div>
-
-                <p style={{ 
-                  fontSize: 13, 
-                  color: 'var(--text-secondary)', 
-                  marginBottom: 16,
-                  lineHeight: 1.5
-                }}>
-                  {entry.description}
-                </p>
-
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  padding: '12px 0 0',
-                  borderTop: '1px solid var(--border-primary)'
-                }}>
-                  <div style={{ display: 'flex', gap: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Layers size={14} color="var(--text-tertiary)" />
-                      <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                        {entry.ontology.entityTypes.length} entities
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <ArrowRight size={14} color="var(--text-tertiary)" />
-                      <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                        {entry.ontology.relationships.length} relationships
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {!isActive && (
-                    <button 
-                      className="btn btn-secondary" 
-                      style={{ padding: '6px 12px', fontSize: 12 }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLoadOntology(entry);
-                      }}
-                    >
-                      Load
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
+        {/* Search + Filters */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: '1 1 220px' }}>
+            <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+            <input
+              type="text"
+              placeholder="Search by name, tag, author…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px 8px 32px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-primary)',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                fontSize: 13,
+              }}
+            />
+          </div>
+          <select
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value as SourceFilter)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-primary)',
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              fontSize: 13,
+            }}
+          >
+            <option value="all">All sources</option>
+            <option value="official">Official</option>
+            <option value="community">Community</option>
+          </select>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-primary)',
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              fontSize: 13,
+            }}
+          >
+            <option value="all">All categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {CATEGORY_LABELS[cat] ?? cat}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div style={{ 
-          marginTop: 24, 
-          padding: 16, 
-          background: 'var(--bg-tertiary)', 
-          borderRadius: 'var(--radius-md)',
-          textAlign: 'center'
-        }}>
+        {/* Loading / Error / Empty */}
+        {loading && (
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>
+            Loading catalogue…
+          </div>
+        )}
+        {error && (
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--ms-red, #D13438)' }}>
+            {error}
+          </div>
+        )}
+        {!loading && !error && filtered.length === 0 && (
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-secondary)' }}>
+            No ontologies match your filters.
+          </div>
+        )}
+
+        {/* Gallery Grid */}
+        {!loading && !error && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+            {filtered.map((entry) => {
+              const isActive = currentOntology.name === entry.ontology.name;
+              const categoryColor = CATEGORY_COLORS[entry.category] ?? '#6B7280';
+              const showRdf = rdfViewId === entry.id;
+
+              return (
+                <motion.div
+                  key={entry.id}
+                  layout
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  style={{
+                    padding: 20,
+                    background: isActive
+                      ? 'linear-gradient(135deg, rgba(0, 120, 212, 0.15), rgba(0, 120, 212, 0.05))'
+                      : 'var(--bg-tertiary)',
+                    borderRadius: 'var(--radius-lg)',
+                    border: isActive ? '2px solid var(--ms-blue)' : '2px solid transparent',
+                    cursor: isActive ? 'default' : 'pointer',
+                    transition: 'border-color 0.2s, background 0.2s',
+                  }}
+                  onClick={() => !isActive && handleLoadOntology(entry)}
+                >
+                  {/* Card header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          background: `${categoryColor}20`,
+                          borderRadius: 'var(--radius-md)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 24,
+                        }}
+                      >
+                        {entry.icon || '📄'}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 16, fontWeight: 600 }}>{entry.name}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: categoryColor,
+                              fontWeight: 600,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                            }}
+                          >
+                            {CATEGORY_LABELS[entry.category] ?? entry.category}
+                          </span>
+                          {entry.source === 'community' && (
+                            <span
+                              style={{
+                                fontSize: 10,
+                                padding: '1px 6px',
+                                background: 'var(--bg-secondary)',
+                                borderRadius: 'var(--radius-sm)',
+                                color: 'var(--text-secondary)',
+                                fontWeight: 500,
+                              }}
+                            >
+                              Community
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {isActive && (
+                      <div
+                        style={{
+                          padding: '4px 8px',
+                          background: 'var(--ms-blue)',
+                          color: 'white',
+                          borderRadius: 'var(--radius-sm)',
+                          fontSize: 11,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Active
+                      </div>
+                    )}
+                  </div>
+
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5 }}>
+                    {entry.description}
+                  </p>
+
+                  {/* Tags */}
+                  {entry.tags.length > 0 && (
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
+                      {entry.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          style={{
+                            fontSize: 10,
+                            padding: '2px 6px',
+                            background: 'var(--bg-secondary)',
+                            borderRadius: 'var(--radius-sm)',
+                            color: 'var(--text-tertiary)',
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Author */}
+                  {entry.author && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12 }}>
+                      <User size={12} color="var(--text-tertiary)" />
+                      <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{entry.author}</span>
+                    </div>
+                  )}
+
+                  {/* Stats + actions */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '12px 0 0',
+                      borderTop: '1px solid var(--border-primary)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Layers size={14} color="var(--text-tertiary)" />
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                          {entry.ontology.entityTypes.length} entities
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <ArrowRight size={14} color="var(--text-tertiary)" />
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                          {entry.ontology.relationships.length} relationships
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: '5px 8px', fontSize: 11 }}
+                        title="View RDF source"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewRdf(entry);
+                        }}
+                      >
+                        <Code size={13} />
+                      </button>
+                      {!isActive && (
+                        <button
+                          className="btn btn-secondary"
+                          style={{ padding: '6px 12px', fontSize: 12 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLoadOntology(entry);
+                          }}
+                        >
+                          Load
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* RDF source view */}
+                  <AnimatePresence>
+                    {showRdf && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        style={{ overflow: 'hidden' }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <pre
+                          style={{
+                            marginTop: 12,
+                            padding: 12,
+                            background: 'var(--bg-primary)',
+                            borderRadius: 'var(--radius-md)',
+                            border: '1px solid var(--border-primary)',
+                            fontSize: 11,
+                            lineHeight: 1.5,
+                            overflow: 'auto',
+                            maxHeight: 250,
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            color: 'var(--text-secondary)',
+                          }}
+                        >
+                          {serializeToRDF(entry.ontology, entry.bindings)}
+                        </pre>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div
+          style={{
+            marginTop: 24,
+            padding: 16,
+            background: 'var(--bg-tertiary)',
+            borderRadius: 'var(--radius-md)',
+            textAlign: 'center',
+          }}
+        >
           <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-            Have your own ontology? Use the <strong>Import / Export</strong> feature to load custom JSON ontologies.
+            Want to contribute? See{' '}
+            <strong>CONTRIBUTING.md</strong> — add your ontology as an RDF file
+            and open a PR.
           </p>
         </div>
 
