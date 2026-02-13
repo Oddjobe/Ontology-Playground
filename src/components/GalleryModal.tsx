@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Layers, ArrowRight, Search, Code, User } from 'lucide-react';
+import { X, Layers, ArrowRight, Search, Code, User, Pencil } from 'lucide-react';
+import { useDesignerStore } from '../store/designerStore';
 import { useAppStore } from '../store/appStore';
 import { serializeToRDF } from '../lib/rdf/serializer';
 import { navigate } from '../lib/router';
@@ -361,6 +362,23 @@ export function GalleryModal({ onClose }: GalleryModalProps) {
                         }}
                       >
                         <Code size={13} />
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: '5px 8px', fontSize: 11 }}
+                        title="Edit in Designer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Load into both stores: playground (appStore) and designer
+                          loadOntology(entry.ontology, entry.bindings);
+                          useDesignerStore.getState().loadDraft(entry.ontology);
+                          // Navigate to designer — the Gallery auto-unmounts because
+                          // showGallery is route-driven (no need to call onClose,
+                          // which would navigate to 'home' and overwrite this route).
+                          navigate({ page: 'designer' });
+                        }}
+                      >
+                        <Pencil size={13} />
                       </button>
                       {!isActive && (
                         <button

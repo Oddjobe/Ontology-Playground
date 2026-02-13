@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GalleryModal } from './GalleryModal';
 import { useAppStore } from '../store/appStore';
+import { useDesignerStore } from '../store/designerStore';
 import type { Catalogue } from '../types/catalogue';
 import type { Ontology } from '../data/ontology';
 
@@ -273,5 +274,37 @@ describe('GalleryModal', () => {
     // Hospital Network: 4 entities, 3 relationships
     expect(screen.getByText('4 entities')).toBeTruthy();
     expect(screen.getByText('3 relationships')).toBeTruthy();
+  });
+
+  it('Edit in Designer loads ontology into designer store and navigates to designer', async () => {
+    mockFetchSuccess();
+    const user = userEvent.setup();
+    render(<GalleryModal onClose={onClose} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Cosmic Coffee')).toBeTruthy();
+    });
+
+    // Click the "Edit in Designer" pencil button for the first entry
+    const editButtons = screen.getAllByTitle('Edit in Designer');
+    expect(editButtons.length).toBeGreaterThan(0);
+    await user.click(editButtons[0]);
+
+    // The designer store should have the ontology loaded
+    const designerState = useDesignerStore.getState();
+    expect(designerState.ontology.name).toBe('Cosmic Coffee');
+    expect(designerState.ontology.entityTypes).toHaveLength(3);
+    expect(designerState.ontology.relationships).toHaveLength(2);
+
+    // The app store (playground) should also have the ontology loaded
+    const appState = useAppStore.getState();
+    expect(appState.currentOntology.name).toBe('Cosmic Coffee');
+    expect(appState.currentOntology.entityTypes).toHaveLength(3);
+
+    // Should navigate to designer, NOT to home
+    expect(window.location.hash).toBe('#/designer');
+
+    // onClose should NOT be called (navigation handles unmounting)
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
