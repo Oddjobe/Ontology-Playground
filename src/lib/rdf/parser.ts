@@ -200,13 +200,17 @@ export function parseRDF(rdfXml: string): { ontology: Ontology; bindings: DataBi
     const about = el.getAttribute('rdf:about') || el.getAttributeNS(RDF_NS, 'about') || '';
     if (!about) continue;
 
+    const comments = getChildTexts(el, 'comment');
+    const hasIdentifierComment = comments.some(c => /^identifier\s+property$/i.test(c.trim()));
+    const descriptionComment = comments.find(c => !/^identifier\s+property$/i.test(c.trim())) ?? null;
+
     parsedDtProps.push({
       about,
       label: getChildText(el, 'label', RDFS_NS) || localNameFromUri(about),
       domainUri: getChildResource(el, 'domain'),
       rangeUri: getChildResource(el, 'range'),
-      comment: getChildText(el, 'comment', RDFS_NS),
-      isIdentifier: getChildText(el, 'isIdentifier') === 'true',
+      comment: descriptionComment,
+      isIdentifier: getChildText(el, 'isIdentifier') === 'true' || hasIdentifierComment,
       unit: getChildText(el, 'unit'),
       enumValues: getChildText(el, 'enumValues'),
       propertyType: getChildText(el, 'propertyType'),

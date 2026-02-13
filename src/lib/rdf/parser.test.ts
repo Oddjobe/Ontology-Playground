@@ -172,6 +172,31 @@ describe('parseRDF', () => {
       expect(byName['e'].values).toEqual(['X', 'Y', 'Z']);
     });
 
+    it('detects identifier from rdfs:comment "Identifier property"', () => {
+      const rdf = `<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:ont="http://example.org/ontology/test/">
+    <owl:Class rdf:about="http://example.org/ontology/test/Customer">
+        <rdfs:label>Customer</rdfs:label>
+    </owl:Class>
+    <owl:DatatypeProperty rdf:about="http://example.org/ontology/test/customer_id">
+        <rdfs:label>id</rdfs:label>
+        <rdfs:domain rdf:resource="http://example.org/ontology/test/Customer"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <rdfs:comment>Unique customer identifier</rdfs:comment>
+        <rdfs:comment>Identifier property</rdfs:comment>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+</rdf:RDF>`;
+      const { ontology } = parseRDF(rdf);
+      const idProp = ontology.entityTypes[0].properties.find((p) => p.name === 'id');
+      expect(idProp?.isIdentifier).toBe(true);
+      // The description should be the non-identifier comment
+      expect(idProp?.description).toBe('Unique customer identifier');
+    });
+
     it('parses unit and description', () => {
       const rdf = `<?xml version="1.0" encoding="UTF-8"?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
