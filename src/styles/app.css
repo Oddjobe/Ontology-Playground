@@ -3255,6 +3255,18 @@ body {
   .mobile-panel-drawer .search-filter-section {
     flex-shrink: 0;
   }
+
+  /* Re-declare display:flex AFTER the base display:none rules (lines ~2851
+     and ~3176) so these win the cascade on mobile viewports. */
+  .header-mobile-menu {
+    display: flex;
+  }
+
+  .mobile-panel-tabs {
+    display: flex;
+    flex-shrink: 0;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ===== Responsive Gallery (inline styles need overrides) ===== */
