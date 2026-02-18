@@ -5,14 +5,14 @@ Transform the Learn section from a flat list of articles into a catalogue of cou
 
 ## Phase 1 — Foundation
 
-- [ ] **Types & router** — Extend `LearnManifest`/`LearnArticle` with `LearnCourse`
+- [x] **Types & router** — Extend `LearnManifest`/`LearnArticle` with `LearnCourse`
   wrapper (`type: 'path' | 'lab'`). Extend learn route to three levels:
   `/#/learn`, `/#/learn/<course>`, `/#/learn/<course>/<article>`.
-- [ ] **Router tests** — Add tests for new learn route with course + article slugs.
+- [x] **Router tests** — Add tests for new learn route with course + article slugs.
 
 ## Phase 2 — Progressive Ontologies
 
-- [ ] **Catalogue entries** — Create 6 incremental sub-ontologies under
+- [x] **Catalogue entries** — Create 6 incremental sub-ontologies under
   `catalogue/official/iq-lab-retail/`:
 
   | Step | Catalogue ID | New entities | Cumulative |
@@ -24,16 +24,16 @@ Transform the Learn section from a flat list of articles into a catalogue of cou
   | 5 | `official/iq-lab-retail/step-5` | + Inventory, Forecast, DemandSignal | 13 |
   | 6 | `official/iq-lab-retail/step-6` | + Promotion, Return | 15 (complete) |
 
-- [ ] **sampleOntologies.ts** — Add the 6 step ontologies to sampleOntologies
+- [x] **sampleOntologies.ts** — Add the 6 step ontologies to sampleOntologies
   under a new `"iq-lab"` category.
 
 ## Phase 3 — Content Restructure
 
-- [ ] **Move existing articles** — Move `content/learn/*.md` into
+- [x] **Move existing articles** — Move `content/learn/*.md` into
   `content/learn/ontology-fundamentals/` subdirectory.
-- [ ] **Add `_meta.md`** — Create course-level metadata file for
+- [x] **Add `_meta.md`** — Create course-level metadata file for
   `ontology-fundamentals` (type: path).
-- [ ] **Lab content** — Create `content/learn/iq-lab-retail-supply-chain/`
+- [x] **Lab content** — Create `content/learn/iq-lab-retail-supply-chain/`
   with `_meta.md` (type: lab) and 7 step markdown files:
   1. Scenario Overview — why retail supply chain, what we'll model
   2. Core Commerce — Customer, Order, Product (embed step-1)
@@ -45,20 +45,20 @@ Transform the Learn section from a flat list of articles into a catalogue of cou
 
 ## Phase 4 — Build Pipeline
 
-- [ ] **compile-learn.ts** — Update to scan subdirectories, parse `_meta.md`
+- [x] **compile-learn.ts** — Update to scan subdirectories, parse `_meta.md`
   for course metadata, emit `courses[]` instead of flat `articles[]`.
 
 ## Phase 5 — UI
 
-- [ ] **LearnPage.tsx** — Three views:
+- [x] **LearnPage.tsx** — Three views:
   1. **Course catalogue** — cards for each course with type badge (Path/Lab)
   2. **Course detail** — article list within a course, progress for labs
   3. **Article view** — existing renderer (already supports `<ontology-embed>`)
 
 ## Phase 6 — Verify
 
-- [ ] All tests pass (`npm test`)
-- [ ] Build succeeds (`npm run build`)
-- [ ] Learn catalogue renders correctly
-- [ ] Lab steps show progressive ontology embeds
-- [ ] Existing "ontology fundamentals" articles still work
+- [x] All tests pass (`npm test`)
+- [x] Build succeeds (`npm run build`)
+- [x] Learn catalogue renders correctly
+- [x] Lab steps show progressive ontology embeds
+- [x] Existing "ontology fundamentals" articles still work

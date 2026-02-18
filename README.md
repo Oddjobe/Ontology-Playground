@@ -57,10 +57,22 @@ inline base64), and click-to-inspect. See the
 
 ### Ontology School
 
-Six in-app articles (`/#/learn`) that teach ontology concepts from the ground
-up — from "What is an Ontology?" through RDF/OWL syntax, Fabric IQ concepts,
-building your first ontology, design patterns, and contributing to the
-catalogue. Each article includes live embedded ontology visualizations.
+A structured learning hub (`/#/learn`) with **8 courses** spanning conceptual
+learning paths and hands-on labs:
+
+- **Ontology Fundamentals** — 6 articles covering core concepts (What is an
+  Ontology? → RDF/OWL → Fabric IQ → Build Your First → Design Patterns →
+  Contributing)
+- **6 Domain Learning Paths** — Cosmic Coffee, E-Commerce, Finance, Healthcare,
+  Manufacturing, and University. Each path has 4 progressive articles that build
+  an ontology step-by-step, with live embedded graphs showing new entities at
+  each stage.
+- **IQ Lab: Retail Supply Chain** — A 7-step hands-on lab that builds a 15-entity
+  ontology from scratch (3 → 15 entities across 6 progressive catalogue entries).
+
+Every article supports **presentation mode** (slides split at `##` headings)
+and includes **interactive quizzes** with instant feedback. Ontology embeds
+load live graphs from the catalogue with optional diff highlighting.
 
 ### Quest System
 
@@ -103,8 +115,9 @@ Client-side hash routing with shareable URLs for every page:
 | `/#/catalogue/<id>` | Specific ontology |
 | `/#/designer` | Visual designer |
 | `/#/designer/<id>` | Designer with catalogue ontology |
-| `/#/learn` | Ontology School index |
-| `/#/learn/<slug>` | Individual article |
+| `/#/learn` | Ontology School — course catalogue |
+| `/#/learn/<course>` | Course detail — article list |
+| `/#/learn/<course>/<article>` | Article view (with presentation mode) |
 
 ## Official Ontologies
 
@@ -205,7 +218,7 @@ ontology-quest/
 │   ├── styles/           # CSS (Microsoft Fluent-inspired dark/light themes)
 │   └── types/            # TypeScript type definitions
 ├── catalogue/            # Official + community ontology RDF files
-├── content/learn/        # Markdown articles for the learning section
+├── content/learn/        # Course directories with markdown articles, quizzes, and metadata
 ├── scripts/              # Build-time compilers (catalogue, learning content)
 ├── api/                  # Azure Functions backend (optional, for AI builder)
 ├── docs/                 # Guides and documentation
@@ -221,6 +234,7 @@ ontology-quest/
 | [Embedding Guide](docs/embed-guide.md) | How to embed interactive ontology widgets on any web page |
 | [GitHub OAuth Setup](docs/github-oauth-setup.md) | How to configure GitHub OAuth for one-click catalogue PRs |
 | [Embed Security](docs/embed-security.md) | Security model for the embeddable widget |
+| [Learning Content Guide](docs/learn-content-guide.md) | How to author courses, articles, quizzes, and ontology embeds for the Ontology School |
 
 ## Technologies
 

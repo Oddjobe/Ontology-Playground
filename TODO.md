@@ -266,6 +266,12 @@ These enhance the overall experience for a community learning resource.
   - "Building your first ontology"
 - [x] Content stored as `.md` files in `content/learn/`, compiled at build time
 - [x] Each tutorial can embed an interactive ontology widget (from §4)
+- [x] Restructured into course-based catalogue with learning paths and hands-on
+  labs (8 courses, 39 articles total)
+- [x] Interactive quizzes with instant correct/wrong feedback
+- [x] Presentation mode (slides split at `##` headings)
+- [x] Progressive ontology catalogue entries for step-by-step learning (18
+  school entries + 6 IQ Lab entries)
 
 ---
 
