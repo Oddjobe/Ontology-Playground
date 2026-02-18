@@ -136,7 +136,7 @@ export function Header({ onHelpClick, onDataSourcesClick, onImportExportClick, o
         <button className="icon-btn" onClick={onDesignerClick} data-tooltip="Designer">
           <PenTool size={20} />
         </button>
-        <button className="icon-btn" onClick={onLearnClick} data-tooltip="Learn">
+        <button className="icon-btn" onClick={onLearnClick} data-tooltip="Ontology School">
           <BookOpen size={20} />
         </button>
         <button className="icon-btn" onClick={onImportExportClick} data-tooltip="Import / Export">
@@ -187,7 +187,7 @@ export function Header({ onHelpClick, onDataSourcesClick, onImportExportClick, o
               <PenTool size={18} /> Designer
             </button>
             <button className="mobile-menu-item" onClick={menuAction(onLearnClick)}>
-              <BookOpen size={18} /> Learn
+              <BookOpen size={18} /> Ontology School
             </button>
             <button className="mobile-menu-item" onClick={menuAction(onImportExportClick)}>
               <FileJson size={18} /> Import / Export

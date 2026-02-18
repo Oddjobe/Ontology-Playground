@@ -1078,9 +1078,16 @@ body {
   .app-container {
     grid-template-columns: 260px 1fr 320px;
   }
+  .app-container .app-footer {
+    left: 260px;
+    right: 320px;
+  }
 }
 
 @media (max-width: 900px) {
+  .app-container .app-footer {
+    display: none;
+  }
   /* Switch from CSS grid to flexbox on mobile — much more reliable across
      iOS Safari, Chrome mobile, and various viewport quirks. */
   .app-container {
@@ -2621,6 +2628,14 @@ body {
   gap: 8px;
   font: 600 16px/1 var(--font-primary);
   color: var(--text-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+.learn-header-title:hover {
+  background: var(--bg-tertiary);
 }
 
 .learn-loading,
@@ -2759,6 +2774,49 @@ body {
   color: var(--ms-blue);
   font: 500 13px/1 var(--font-primary);
   margin-top: 8px;
+}
+
+/* --- Footer --- */
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 24px 48px;
+  font: 400 13px/1 var(--font-primary);
+  color: var(--text-tertiary);
+}
+
+/* In the playground grid, pin footer to bottom of graph area */
+.app-container .app-footer {
+  position: fixed;
+  bottom: 4px;
+  left: 280px;
+  right: 360px;
+  padding: 6px 12px;
+  z-index: 50;
+  pointer-events: none;
+  justify-content: center;
+}
+.app-container .app-footer a,
+.app-container .app-footer span {
+  pointer-events: auto;
+}
+
+.app-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.app-footer a:hover {
+  color: var(--ms-blue);
+}
+.app-footer-sep {
+  color: var(--text-tertiary);
 }
 
 /* --- Course detail header --- */

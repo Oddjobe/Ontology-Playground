@@ -18,7 +18,8 @@ import {
   Toast,
   CommandPalette,
   GuidedTour,
-  isTourDismissed
+  isTourDismissed,
+  AppFooter
 } from './components';
 import type { CommandItem } from './components';
 import { useAppStore } from './store/appStore';
@@ -157,7 +158,7 @@ function App() {
   const commands = useMemo<CommandItem[]>(() => [
     { id: 'catalogue', label: 'Open Catalogue', icon: <LayoutGrid size={18} />, action: openGallery },
     { id: 'designer', label: 'Open Designer', icon: <PenTool size={18} />, action: openDesigner },
-    { id: 'learn', label: 'Open Learn', icon: <BookOpen size={18} />, action: openLearn },
+    { id: 'learn', label: 'Open Ontology School', icon: <BookOpen size={18} />, action: openLearn },
     { id: 'import-export', label: 'Import / Export', icon: <FileJson size={18} />, action: () => setShowImportExport(true) },
     { id: 'summary', label: 'View Summary', icon: <FileText size={18} />, action: () => setShowSummary(true) },
     { id: 'help', label: 'Help', icon: <HelpCircle size={18} />, shortcut: '?', action: () => setShowHelp(true) },
@@ -273,6 +274,8 @@ function App() {
           commands={commands}
         />
       </AnimatePresence>
+
+      <AppFooter />
     </div>
   );
 }

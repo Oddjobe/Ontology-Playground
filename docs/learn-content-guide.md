@@ -1,6 +1,6 @@
 # Learning Content Authoring Guide
 
-How to create courses and articles for the **Learn** section of the Ontology
+How to create courses and articles for the **Ontology School** section of the Ontology
 Playground. This covers the directory structure, frontmatter format, markdown
 features (including quizzes), the compilation pipeline, and presentation mode.
 

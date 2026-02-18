@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ArrowLeft, BookOpen, ChevronRight, Sun, Moon, FlaskConical, GraduationCap, Play, X } from 'lucide-react';
+import { AppFooter } from './AppFooter';
 import { useAppStore } from '../store/appStore';
 import { navigate } from '../lib/router';
 import type { Route } from '../lib/router';
@@ -80,10 +81,10 @@ export function LearnPage({ route }: LearnPageProps) {
           <ArrowLeft size={20} />
           <span>{backLabel}</span>
         </button>
-        <div className="learn-header-title">
+        <button className="learn-header-title" onClick={() => navigate({ page: 'learn' })}>
           <BookOpen size={20} />
-          <span>Learn</span>
-        </div>
+          <span>Ontology School</span>
+        </button>
         <button className="icon-btn" onClick={toggleDarkMode} title="Toggle Theme">
           {darkMode ? <Sun size={20} /> : <Moon size={20} />}
         </button>
@@ -108,7 +109,6 @@ function CourseCatalogue({ courses }: { courses: LearnCourse[] }) {
   return (
     <div className="learn-index">
       <div className="learn-index-hero">
-        <h1>Learn</h1>
         <p>
           Learning paths and hands-on labs to help you understand and build
           ontologies for Microsoft Fabric IQ.
@@ -139,13 +139,10 @@ function CourseCatalogue({ courses }: { courses: LearnCourse[] }) {
           </button>
         ))}
       </div>
+      <AppFooter />
     </div>
   );
 }
-
-// -------------------------------------------------------------------
-// Course Detail (article list within a course)
-// -------------------------------------------------------------------
 
 function CourseDetail({ course }: { course: LearnCourse }) {
   return (

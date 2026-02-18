@@ -55,7 +55,7 @@ Supports dark/light themes, multiple loading methods (catalogue ID, URL,
 inline base64), and click-to-inspect. See the
 [Embedding Guide](docs/embed-guide.md) for details.
 
-### Learning Content
+### Ontology School
 
 Six in-app articles (`/#/learn`) that teach ontology concepts from the ground
 up — from "What is an Ontology?" through RDF/OWL syntax, Fabric IQ concepts,
@@ -76,7 +76,7 @@ NL2Ontology capability.
 ### Command Palette & Keyboard Shortcuts
 
 Press `⌘K` / `Ctrl+K` anywhere to open a searchable command palette. Jump
-to the Catalogue, Designer, Learn page, Import/Export, Help, and more without
+to the Catalogue, Designer, Ontology School, Import/Export, Help, and more without
 leaving the keyboard. Press `?` for quick help access. Arrow keys + Enter to
 navigate the palette.
 
@@ -103,7 +103,7 @@ Client-side hash routing with shareable URLs for every page:
 | `/#/catalogue/<id>` | Specific ontology |
 | `/#/designer` | Visual designer |
 | `/#/designer/<id>` | Designer with catalogue ontology |
-| `/#/learn` | Learning content index |
+| `/#/learn` | Ontology School index |
 | `/#/learn/<slug>` | Individual article |
 
 ## Official Ontologies

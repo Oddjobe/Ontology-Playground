@@ -1,3 +1,4 @@
+export { AppFooter } from './AppFooter';
 export { OntologyGraph } from './OntologyGraph';
 export { InspectorPanel } from './InspectorPanel';
 export { QuestPanel } from './QuestPanel';
