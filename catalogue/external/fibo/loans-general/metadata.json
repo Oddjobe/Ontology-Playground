@@ -2,7 +2,7 @@
   "name": "FIBO Loans General (Adapted Subset)",
   "description": "A curated, classroom-friendly subset adapted from the EDM Council FIBO LOAN/LoansGeneral/Loans module — covering loan, collateral, servicing, and payment semantics.",
   "icon": "🏛️",
-  "category": "finance",
+  "category": "fibo",
   "tags": [
     "fibo",
     "finance",
