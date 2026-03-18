@@ -195,7 +195,7 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
                 type="password"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="eyJ0eXAiOiJKV1Qi..."
+                placeholder="Paste your bearer token here"
                 spellCheck={false}
                 style={{
                   width: '100%', padding: '8px 12px',
