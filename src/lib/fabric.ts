@@ -624,3 +624,292 @@ export async function updateOntologyDefinition(
     await pollOperation(result.operationId, token, 60, 3000, onProgress);
   }
 }
+
+// ─── Data Binding Support ──────────────────────────────────────────────────
+
+export interface DataBindingConfig {
+  workspaceId: string;
+  lakehouseId: string;
+  entityIdMap: Map<string, string>;
+  propertyIdMap: Map<string, Map<string, string>>;
+  entityNameMap: Map<string, string>;
+}
+
+/**
+ * Generate DataBinding definition parts for each entity type.
+ * Maps each entity to a Lakehouse table with matching column names.
+ */
+export function generateDataBindingParts(
+  ontology: Ontology,
+  config: DataBindingConfig,
+): FabricDefinitionPart[] {
+  const parts: FabricDefinitionPart[] = [];
+
+  for (const entity of ontology.entityTypes) {
+    const fabricEntityId = config.entityIdMap.get(entity.id);
+    const propMap = config.propertyIdMap.get(entity.id);
+    const tableName = config.entityNameMap.get(entity.id);
+    if (!fabricEntityId || !propMap || !tableName) continue;
+
+    const sourceProps = entity.properties.length > 0
+      ? entity.properties
+      : [{ name: 'Id', type: 'string' as const }];
+
+    const bindingId = crypto.randomUUID();
+
+    const binding = {
+      id: bindingId,
+      dataBindingConfiguration: {
+        dataBindingType: 'NonTimeSeries',
+        propertyBindings: sourceProps.map(prop => ({
+          sourceColumnName: prop.name,
+          targetPropertyId: propMap.get(prop.name) ?? '',
+        })).filter(b => b.targetPropertyId),
+        sourceTableProperties: {
+          sourceType: 'LakehouseTable',
+          workspaceId: config.workspaceId,
+          itemId: config.lakehouseId,
+          sourceTableName: tableName,
+          sourceSchema: 'dbo',
+        },
+      },
+    };
+
+    parts.push({
+      path: `EntityTypes/${fabricEntityId}/DataBindings/${bindingId}.json`,
+      payload: toBase64(binding),
+      payloadType: 'InlineBase64',
+    });
+  }
+
+  return parts;
+}
+
+/**
+ * Fetch the current definition of an ontology from Fabric.
+ * Returns the parts array, or null if the operation fails.
+ * getDefinition is async (202) — we poll the operation then fetch the result.
+ */
+async function getDefinition(
+  workspaceId: string,
+  ontologyId: string,
+  token: string,
+): Promise<FabricDefinitionPart[] | null> {
+  try {
+    const result = await fabricFetch<{ definition: FabricOntologyDefinition } | null>(
+      `/workspaces/${encodeURIComponent(workspaceId)}/ontologies/${encodeURIComponent(ontologyId)}/getDefinition`,
+      token,
+      { method: 'POST' },
+    );
+    if (!result.data && result.operationId) {
+      await pollOperation(result.operationId, token, 20, 3000);
+      const opResult = await fabricFetch<{ definition: FabricOntologyDefinition }>(
+        `/operations/${result.operationId}/result`,
+        token,
+      );
+      return opResult.data?.definition?.parts ?? null;
+    }
+    return result.data?.definition?.parts ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Find a Lakehouse in a workspace by partial name match.
+ * Retries to handle eventual consistency after ontology creation.
+ */
+export async function findLakehouse(
+  workspaceId: string,
+  token: string,
+  nameContains: string,
+  maxRetries = 10,
+  delayMs = 3000,
+): Promise<{ id: string; displayName: string } | null> {
+  for (let i = 0; i < maxRetries; i++) {
+    const { data } = await fabricFetch<{ value: { id: string; displayName: string }[] }>(
+      `/workspaces/${encodeURIComponent(workspaceId)}/lakehouses`,
+      token,
+    );
+    const lakehouses = data?.value ?? [];
+    const match = lakehouses.find(l =>
+      l.displayName.toLowerCase().includes(nameContains.toLowerCase()),
+    );
+    if (match) return match;
+    if (i < maxRetries - 1) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+  return null;
+}
+
+/**
+ * Full push with sample data: create ontology → upload data → bind.
+ *
+ * Pipeline:
+ * 1. Validate + convert ontology to Fabric definition
+ * 2. Create ontology (schema only)
+ * 3. Find auto-provisioned Lakehouse (Fabric creates one per ontology)
+ * 4. Create temp plain Lakehouse (auto-provisioned one has schemas, Load Table doesn't work)
+ * 5. Upload CSV → Load as Delta tables in temp LH
+ * 6. Copy Delta files to auto-provisioned LH's Tables/dbo/ (Fabric auto-registers them)
+ * 7. Delete temp LH (best-effort)
+ * 8. Create data bindings referencing auto-provisioned LH
+ */
+export async function createOntologyWithData(
+  workspaceId: string,
+  fabricToken: string,
+  oneLakeToken: string,
+  ontology: Ontology,
+  sampleTables: Map<string, import('../data/ontology').EntityInstance[]>,
+  onProgress?: (progress: PollProgress) => void,
+  onStatus?: (message: string) => void,
+): Promise<FabricOntologyResponse> {
+  // Step 1: Validate and convert
+  validateForFabric(ontology);
+  const conversion = convertToFabricParts(ontology);
+
+  // Step 2: Create the ontology (schema only)
+  onStatus?.('Creating ontology schema…');
+  let displayName = sanitizeItemName(ontology.name);
+  try {
+    const existing = await listOntologies(workspaceId, fabricToken);
+    const existingNames = new Set(existing.map(o => o.displayName));
+    if (existingNames.has(displayName)) {
+      let suffix = 2;
+      while (existingNames.has(`${displayName}_${suffix}`)) suffix++;
+      displayName = `${displayName}_${suffix}`.slice(0, 89);
+    }
+  } catch { /* proceed with original name */ }
+
+  const body: CreateOntologyRequest = {
+    displayName,
+    description: (ontology.description ?? '').slice(0, 256),
+    definition: conversion.definition,
+  };
+
+  const result = await fabricFetch<FabricOntologyResponse>(
+    `/workspaces/${encodeURIComponent(workspaceId)}/ontologies`,
+    fabricToken,
+    { method: 'POST', body: JSON.stringify(body) },
+  );
+
+  if (result.operationId) {
+    onProgress?.({ attempt: 0, maxAttempts: 60, status: 'Creating ontology…' });
+    await pollOperation(result.operationId, fabricToken, 60, 3000, onProgress);
+  }
+
+  const ontologies = await listOntologies(workspaceId, fabricToken);
+  const created = ontologies.find(o => o.displayName === displayName);
+  if (!created) {
+    throw new FabricApiError('Ontology created but not found in workspace', 404);
+  }
+
+  // Step 3: Find the auto-provisioned Lakehouse
+  onStatus?.('Waiting for auto-provisioned Lakehouse…');
+  const autoLh = await findLakehouse(workspaceId, fabricToken, created.id.replace(/-/g, ''));
+  if (!autoLh) {
+    onStatus?.('⚠ Could not find auto-provisioned Lakehouse — ontology created without sample data');
+    return created;
+  }
+
+  // Step 4: Create a temporary plain Lakehouse for CSV→Delta conversion
+  onStatus?.('Creating temporary Lakehouse…');
+  const { createLakehouse, uploadEntityTable, copyDeltaTable, deleteLakehouse } = await import('./fabricLakehouse');
+  const tmpLhName = `${displayName}_tmp`.slice(0, 89);
+  let tmpLakehouse: { id: string; displayName: string };
+  try {
+    tmpLakehouse = await createLakehouse(workspaceId, fabricToken, tmpLhName, 'Temporary — CSV to Delta conversion');
+  } catch (err) {
+    console.warn('Failed to create temp Lakehouse:', err);
+    onStatus?.('⚠ Could not create temp Lakehouse — ontology created without sample data');
+    return created;
+  }
+
+  // Step 5: Upload sample data to temp LH and convert to Delta
+  const tableEntries = Array.from(sampleTables.entries());
+  const loadedTableNames: string[] = [];
+  for (let i = 0; i < tableEntries.length; i++) {
+    const [entityName, instances] = tableEntries[i];
+    const tableName = sanitizeName(entityName);
+    onStatus?.(`Uploading ${entityName} (${i + 1}/${tableEntries.length})…`);
+    try {
+      await uploadEntityTable(workspaceId, tmpLakehouse.id, oneLakeToken, tableName, instances, fabricToken);
+      loadedTableNames.push(tableName);
+    } catch (err) {
+      console.warn(`Failed to upload table ${tableName}:`, err);
+    }
+  }
+
+  if (loadedTableNames.length === 0 && tableEntries.length > 0) {
+    onStatus?.('⚠ All table uploads failed — ontology created without sample data');
+    return created;
+  }
+
+  // Step 6: Copy Delta files from temp LH to auto-provisioned LH
+  onStatus?.('Copying tables to ontology Lakehouse…');
+  const boundTableNames: string[] = [];
+  for (const tableName of loadedTableNames) {
+    try {
+      await copyDeltaTable(workspaceId, tmpLakehouse.id, autoLh.id, tableName, oneLakeToken);
+      boundTableNames.push(tableName);
+    } catch (err) {
+      console.warn(`Failed to copy ${tableName}:`, err);
+    }
+  }
+
+  // Step 6b: Delete temp Lakehouse (best-effort)
+  onStatus?.('Cleaning up temporary Lakehouse…');
+  const deleted = await deleteLakehouse(workspaceId, tmpLakehouse.id, fabricToken);
+  if (!deleted) {
+    console.warn(`Could not delete temp Lakehouse ${tmpLhName} — manual cleanup needed`);
+  }
+
+  if (boundTableNames.length === 0) {
+    onStatus?.('⚠ Could not copy tables — ontology created without data bindings');
+    return created;
+  }
+
+  // Step 7: Create data bindings for successfully copied tables
+  if (boundTableNames.length < loadedTableNames.length) {
+    onStatus?.(`Linked ${boundTableNames.length}/${loadedTableNames.length} tables. Creating data bindings…`);
+  } else {
+    onStatus?.('Creating data bindings…');
+  }
+
+  const boundTableSet = new Set(boundTableNames);
+  const bindingParts = generateDataBindingParts(ontology, {
+    workspaceId,
+    lakehouseId: autoLh.id,
+    entityIdMap: conversion.entityIdMap,
+    propertyIdMap: conversion.propertyIdMap,
+    entityNameMap: conversion.entityNameMap,
+  }).filter(part => {
+    const payload = JSON.parse(atob(part.payload));
+    const tableName = payload?.dataBindingConfiguration?.sourceTableProperties?.sourceTableName;
+    return !tableName || boundTableSet.has(tableName);
+  });
+
+  if (bindingParts.length > 0) {
+    // Fetch current definition from Fabric (it adds $schema fields after creation)
+    const currentDefParts = await getDefinition(workspaceId, created.id, fabricToken);
+    const defParts = currentDefParts ?? conversion.definition.parts;
+    const fullDefinition: FabricOntologyDefinition = {
+      parts: [...defParts, ...bindingParts],
+    };
+
+    const updateResult = await fabricFetch<void>(
+      `/workspaces/${encodeURIComponent(workspaceId)}/ontologies/${encodeURIComponent(created.id)}/updateDefinition?updateMetadata=true`,
+      fabricToken,
+      { method: 'POST', body: JSON.stringify({ definition: fullDefinition }) },
+    );
+
+    if (updateResult.operationId) {
+      onStatus?.('Applying data bindings…');
+      await pollOperation(updateResult.operationId, fabricToken, 60, 3000, onProgress);
+    }
+  }
+
+  onStatus?.('✓ Ontology ready with sample data');
+  return created;
+}

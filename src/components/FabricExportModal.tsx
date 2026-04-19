@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Cloud, Loader2, CheckCircle, AlertCircle, RefreshCw, LogIn, LogOut } from 'lucide-react';
+import { X, Cloud, Loader2, CheckCircle, AlertCircle, RefreshCw, LogIn, LogOut, Database } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import {
   createOntology,
+  createOntologyWithData,
   updateOntologyDefinition,
   listOntologies,
   FabricApiError,
@@ -15,6 +16,7 @@ import {
   isMsalConfigured,
   consumeRedirectResult,
   acquireFabricToken,
+  acquireOneLakeToken,
   signInWithRedirect,
   signOut,
   hasPendingDeployIntent,
@@ -22,6 +24,7 @@ import {
   type FabricAuthResult,
 } from '../lib/msalAuth';
 import { listWorkspaces, type FabricWorkspace } from '../lib/fabricWorkspace';
+import { generateSampleData } from '../lib/sampleDataGenerator';
 
 interface FabricExportModalProps {
   onClose: () => void;
@@ -42,7 +45,7 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
   const [result, setResult] = useState<FabricOntologyResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-
+  const [includeSampleData, setIncludeSampleData] = useState(false);
   // MSAL state
   const [authAccount, setAuthAccount] = useState<FabricAuthResult['account'] | null>(null);
   const [workspaces, setWorkspaces] = useState<FabricWorkspace[]>([]);
@@ -178,7 +181,37 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
     }
 
     try {
-      if (mode === 'create') {
+      if (mode === 'create' && includeSampleData && useMsal && authAccount) {
+        // Full pipeline: create + upload data + bind
+        setStatusMessage('Generating sample data…');
+        const sampleData = generateSampleData(currentOntology);
+        let oneLakeToken: string;
+        try {
+          const olResult = await acquireOneLakeToken();
+          oneLakeToken = olResult.accessToken;
+        } catch {
+          // OneLake consent not available — fall back to ontology-only
+          setStatusMessage('OneLake permission unavailable — creating ontology without sample data…');
+          const created = await createOntology(
+            workspaceId.trim(),
+            activeToken.trim(),
+            currentOntology,
+          );
+          setResult(created);
+          setStep('done');
+          return;
+        }
+        const created = await createOntologyWithData(
+          workspaceId.trim(),
+          activeToken.trim(),
+          oneLakeToken,
+          currentOntology,
+          sampleData.tables,
+          undefined,
+          setStatusMessage,
+        );
+        setResult(created);
+      } else if (mode === 'create') {
         setStatusMessage('Creating ontology in Fabric...');
         const created = await createOntology(
           workspaceId.trim(),
@@ -507,6 +540,46 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {/* Sample data toggle (only available for create + MSAL) */}
+            {mode === 'create' && useMsal && authAccount && (
+              <div
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 14px',
+                  background: includeSampleData ? 'rgba(0, 120, 212, 0.08)' : 'var(--bg-tertiary)',
+                  borderRadius: 'var(--radius-sm)',
+                  marginTop: 12,
+                  cursor: 'pointer',
+                  border: includeSampleData ? '1px solid rgba(0, 120, 212, 0.3)' : '1px solid transparent',
+                }}
+                onClick={() => setIncludeSampleData(!includeSampleData)}
+              >
+                <Database size={16} color={includeSampleData ? 'var(--ms-blue)' : 'var(--text-tertiary)'} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Include sample data
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                    Generate realistic data and populate the graph with nodes and edges
+                  </div>
+                </div>
+                <div style={{
+                  width: 36, height: 20, borderRadius: 10,
+                  background: includeSampleData ? 'var(--ms-blue)' : 'var(--bg-secondary)',
+                  border: '1px solid var(--border-primary)',
+                  position: 'relative', transition: 'background 0.2s',
+                }}>
+                  <div style={{
+                    width: 16, height: 16, borderRadius: '50%',
+                    background: 'white', position: 'absolute', top: 1,
+                    left: includeSampleData ? 17 : 1,
+                    transition: 'left 0.2s',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                  }} />
+                </div>
               </div>
             )}
 
