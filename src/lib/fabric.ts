@@ -35,7 +35,7 @@ export interface FabricEntityType {
   baseEntityTypeId: null;
   name: string;
   entityIdParts: string[];
-  displayNamePropertyId: string;
+  displayNamePropertyId: string | null;
   namespaceType: 'Custom';
   visibility: 'Visible';
   properties: FabricEntityTypeProperty[];
@@ -75,15 +75,22 @@ export interface FabricListOntologiesResponse {
 /**
  * Generate a positive 64-bit integer ID as a string, matching Fabric's
  * requirement for entity/property/relationship IDs.
+ * Pass a Set to guarantee uniqueness within a conversion run.
  */
-function generateFabricId(): string {
-  // Use crypto.getRandomValues for a 53-bit positive integer
-  // (stays within JS safe integer range)
-  const buf = new Uint32Array(2);
-  crypto.getRandomValues(buf);
-  const high = buf[0] & 0x001FFFFF;  // 21 bits
-  const low = buf[1];                 // 32 bits
-  return String(high * 0x100000000 + low);
+function generateFabricId(usedIds?: Set<string>): string {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const buf = new Uint32Array(2);
+    crypto.getRandomValues(buf);
+    const high = buf[0] & 0x001FFFFF;  // 21 bits
+    const low = buf[1];                 // 32 bits
+    const val = high * 0x100000000 + low;
+    if (val === 0) continue;
+    const id = String(val);
+    if (usedIds && usedIds.has(id)) continue;
+    usedIds?.add(id);
+    return id;
+  }
+  return String(Date.now()); // last-resort fallback
 }
 
 // ─── Type mapping ──────────────────────────────────────────────────────────
@@ -118,23 +125,101 @@ function toBase64(obj: unknown): string {
 
 export interface ConversionResult {
   definition: FabricOntologyDefinition;
-  entityIdMap: Map<string, string>;  // playground id → fabric id
+  entityIdMap: Map<string, string>;     // playground id → fabric id
+  propertyIdMap: Map<string, Map<string, string>>;  // playground entity id → (propName → fabric prop id)
+  entityNameMap: Map<string, string>;   // playground entity id → sanitized fabric name
+}
+
+export class FabricValidationError extends Error {
+  readonly errors: string[];
+
+  constructor(errors: string[]) {
+    super(`Ontology validation failed:\n• ${errors.join('\n• ')}`);
+    this.name = 'FabricValidationError';
+    this.errors = errors;
+  }
+}
+
+/**
+ * Preflight validation — checks the ontology for issues that would cause
+ * Fabric import failures. Throws with a human-readable message on failure.
+ */
+export function validateForFabric(ontology: Ontology): void {
+  const errors: string[] = [];
+
+  // Check for duplicate entity IDs
+  const seenEntityIds = new Set<string>();
+  for (const entity of ontology.entityTypes) {
+    if (seenEntityIds.has(entity.id)) {
+      errors.push(`Duplicate entity ID: "${entity.id}" appears more than once`);
+    }
+    seenEntityIds.add(entity.id);
+  }
+
+  const entityIds = new Set(ontology.entityTypes.map(e => e.id));
+
+  // Check for duplicate entity names after sanitization
+  const sanitizedEntityNames = new Map<string, string>();
+  for (const entity of ontology.entityTypes) {
+    const sName = sanitizeName(entity.name);
+    if (sanitizedEntityNames.has(sName)) {
+      errors.push(`Entity name collision: "${entity.name}" and "${sanitizedEntityNames.get(sName)}" both become "${sName}" after sanitization`);
+    }
+    sanitizedEntityNames.set(sName, entity.name);
+
+    // Check for duplicate property names within an entity after sanitization
+    const sanitizedPropNames = new Map<string, string>();
+    for (const prop of entity.properties) {
+      const sProp = sanitizeName(prop.name);
+      if (sanitizedPropNames.has(sProp)) {
+        errors.push(`Property collision in "${entity.name}": "${prop.name}" and "${sanitizedPropNames.get(sProp)}" both become "${sProp}"`);
+      }
+      sanitizedPropNames.set(sProp, prop.name);
+    }
+  }
+
+  // Check relationship references
+  for (const rel of ontology.relationships) {
+    if (!entityIds.has(rel.from)) {
+      errors.push(`Relationship "${rel.name}" references unknown source entity "${rel.from}"`);
+    }
+    if (!entityIds.has(rel.to)) {
+      errors.push(`Relationship "${rel.name}" references unknown target entity "${rel.to}"`);
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new FabricValidationError(errors);
+  }
 }
 
 /**
  * Convert a Playground ontology to Fabric's definition.parts format.
  * Pure function — no side effects.
+ *
+ * Handles:
+ * - Synthetic "Id" property for entities with no properties
+ * - Cross-entity property name conflicts (auto-disambiguated with entity suffix)
+ * - Duplicate relationship names (auto-disambiguated with source entity suffix)
+ * - Correct displayNamePropertyId per Fabric spec
  */
 export function convertToFabricParts(ontology: Ontology): ConversionResult {
   const parts: FabricDefinitionPart[] = [];
   const entityIdMap = new Map<string, string>();
-  const propertyIdMap = new Map<string, Map<string, string>>(); // entityId → (propName → fabricId)
+  const propertyIdMap = new Map<string, Map<string, string>>();
+  const entityNameMap = new Map<string, string>();
+  const usedIds = new Set<string>(); // guarantees unique Fabric IDs
 
-  // Platform part
+  // Platform part — required by Fabric definition schema
   const platform = {
+    $schema: 'https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json',
     metadata: {
       type: 'Ontology',
-      displayName: ontology.name,
+      displayName: sanitizeItemName(ontology.name),
+    },
+    config: {
+      version: '2.0',
+      logicalId: '00000000-0000-0000-0000-000000000000',
     },
   };
   parts.push({
@@ -143,45 +228,73 @@ export function convertToFabricParts(ontology: Ontology): ConversionResult {
     payloadType: 'InlineBase64',
   });
 
-  // Empty definition.json (required)
+  // definition.json — empty root (required by Fabric)
   parts.push({
     path: 'definition.json',
     payload: toBase64({}),
     payloadType: 'InlineBase64',
   });
 
+  // Build global property name → valueType map to detect cross-entity conflicts.
+  // Fabric requires that properties with the same name have the same type globally.
+  const globalPropTypes = new Map<string, string>(); // sanitizedName → valueType
+  const conflictingProps = new Set<string>(); // sanitizedNames that have type conflicts
+  for (const entity of ontology.entityTypes) {
+    const props = entity.properties.length > 0
+      ? entity.properties
+      : [{ name: 'Id', type: 'string' as const }];
+    for (const prop of props) {
+      const sName = sanitizeName(prop.name);
+      const vType = mapValueType(prop.type);
+      const existing = globalPropTypes.get(sName);
+      if (existing && existing !== vType) {
+        conflictingProps.add(sName);
+      }
+      if (!existing) globalPropTypes.set(sName, vType);
+    }
+  }
+
   // Entity Types
   for (const entity of ontology.entityTypes) {
-    const fabricEntityId = generateFabricId();
+    const fabricEntityId = generateFabricId(usedIds);
     entityIdMap.set(entity.id, fabricEntityId);
+    entityNameMap.set(entity.id, sanitizeName(entity.name));
 
     const propMap = new Map<string, string>();
     propertyIdMap.set(entity.id, propMap);
 
-    // Build properties
-    const fabricProperties: FabricEntityTypeProperty[] = entity.properties.map(prop => {
-      const fabricPropId = generateFabricId();
+    // Inject synthetic "Id" if entity has no properties
+    const sourceProps = entity.properties.length > 0
+      ? entity.properties
+      : [{ name: 'Id', type: 'string' as const, isIdentifier: true }];
+
+    const fabricProperties: FabricEntityTypeProperty[] = sourceProps.map(prop => {
+      const fabricPropId = generateFabricId(usedIds);
       propMap.set(prop.name, fabricPropId);
+      let propName = sanitizeName(prop.name);
+      // Disambiguate cross-entity property name conflicts by suffixing entity name
+      if (conflictingProps.has(propName)) {
+        propName = `${propName}_${sanitizeName(entity.name)}`.slice(0, 128);
+      }
       return {
         id: fabricPropId,
-        name: sanitizeName(prop.name),
+        name: propName,
         redefines: null,
         baseTypeNamespaceType: null,
         valueType: mapValueType(prop.type),
       };
     });
 
-    // Pick identifier: first isIdentifier property, or first property
-    const identifierProp = entity.properties.find(p => p.isIdentifier) || entity.properties[0];
-    const identifierFabricId = identifierProp ? propMap.get(identifierProp.name)! : fabricProperties[0]?.id;
+    const identifierProp = sourceProps.find(p => 'isIdentifier' in p && p.isIdentifier) || sourceProps[0];
+    const identifierFabricId = propMap.get(identifierProp.name)!;
 
     const fabricEntity: FabricEntityType = {
       id: fabricEntityId,
       namespace: 'usertypes',
       baseEntityTypeId: null,
       name: sanitizeName(entity.name),
-      entityIdParts: identifierFabricId ? [identifierFabricId] : [],
-      displayNamePropertyId: identifierFabricId ?? '',
+      entityIdParts: [identifierFabricId],
+      displayNamePropertyId: identifierFabricId,
       namespaceType: 'Custom',
       visibility: 'Visible',
       properties: fabricProperties,
@@ -195,22 +308,53 @@ export function convertToFabricParts(ontology: Ontology): ConversionResult {
     });
   }
 
-  // Relationship Types
+  // Detect duplicate relationship names so we can auto-disambiguate.
+  // Fabric enforces globally unique relationship names.
+  const relNameCounts = new Map<string, number>();
   for (const rel of ontology.relationships) {
-    const fabricRelId = generateFabricId();
+    const sName = sanitizeName(rel.name);
+    relNameCounts.set(sName, (relNameCounts.get(sName) || 0) + 1);
+  }
+  const duplicateRelNames = new Set(
+    [...relNameCounts.entries()].filter(([, c]) => c > 1).map(([n]) => n),
+  );
+
+  // Relationship Types
+  const usedRelNames = new Set<string>();
+  for (const rel of ontology.relationships) {
+    const fabricRelId = generateFabricId(usedIds);
     const sourceEntityId = entityIdMap.get(rel.from);
     const targetEntityId = entityIdMap.get(rel.to);
 
     if (!sourceEntityId || !targetEntityId) {
-      // Skip relationships referencing unknown entities
-      continue;
+      const missing = !sourceEntityId ? rel.from : rel.to;
+      throw new FabricApiError(
+        `Relationship "${rel.name}" references entity "${missing}" which does not exist in the ontology`,
+        422,
+        'InvalidRelationship',
+      );
     }
 
-    const fabricRel: FabricRelationshipType = {
-      namespace: 'usertypes',
+    // Disambiguate duplicate relationship names by appending source entity name
+    let relName = sanitizeName(rel.name);
+    if (duplicateRelNames.has(relName)) {
+      const sourceEntity = ontology.entityTypes.find(e => e.id === rel.from);
+      const suffix = sourceEntity ? sanitizeName(sourceEntity.name) : rel.from;
+      relName = `${relName}_${suffix}`.slice(0, 128);
+    }
+    // Final dedup: if still collides (e.g., same source), append numeric suffix
+    const baseRelName = relName;
+    let counter = 2;
+    while (usedRelNames.has(relName)) {
+      relName = `${baseRelName}_${counter++}`.slice(0, 128);
+    }
+    usedRelNames.add(relName);
+
+    const fabricRel = {
+      namespace: 'usertypes' as const,
       id: fabricRelId,
-      name: sanitizeName(rel.name),
-      namespaceType: 'Custom',
+      name: relName,
+      namespaceType: 'Custom' as const,
       source: { entityTypeId: sourceEntityId },
       target: { entityTypeId: targetEntityId },
     };
@@ -225,21 +369,33 @@ export function convertToFabricParts(ontology: Ontology): ConversionResult {
   return {
     definition: { parts },
     entityIdMap,
+    propertyIdMap,
+    entityNameMap,
   };
 }
 
 /**
- * Sanitize a name to match Fabric's regex: ^[a-zA-Z][a-zA-Z0-9_-]{0,127}$
+ * Sanitize an internal name (entity types, properties, relationships).
+ * Fabric allows only: letters, numbers, underscores; must start with a letter.
  */
 function sanitizeName(name: string): string {
-  // Replace spaces and invalid chars with underscores
-  let sanitized = name.replace(/[^a-zA-Z0-9_-]/g, '_');
-  // Ensure starts with a letter
+  let sanitized = name.replace(/[^a-zA-Z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
   if (sanitized.length === 0 || !/^[a-zA-Z]/.test(sanitized)) {
     sanitized = 'E_' + sanitized;
   }
-  // Truncate to 128 characters
   return sanitized.slice(0, 128);
+}
+
+/**
+ * Sanitize an item display name for Fabric's stricter item-level rules:
+ * must start with a letter, < 90 chars, only letters, numbers, underscores.
+ */
+export function sanitizeItemName(name: string): string {
+  let sanitized = name.replace(/[^a-zA-Z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+  if (sanitized.length === 0 || !/^[a-zA-Z]/.test(sanitized)) {
+    sanitized = 'Ontology_' + sanitized;
+  }
+  return sanitized.slice(0, 89);
 }
 
 // ─── Fabric REST API client ────────────────────────────────────────────────
@@ -294,6 +450,10 @@ async function fabricFetch<T>(
     } catch {
       // Use default message
     }
+    // Capacity not active is returned as 404 with errorCode "CapacityNotActive"
+    if (errorCode === 'CapacityNotActive') {
+      message = 'The Fabric capacity assigned to this workspace is paused or inactive. Please resume it in the Azure portal and try again.';
+    }
     throw new FabricApiError(message, res.status, errorCode);
   }
 
@@ -302,14 +462,24 @@ async function fabricFetch<T>(
   return { data };
 }
 
+export interface PollProgress {
+  attempt: number;
+  maxAttempts: number;
+  status?: string;
+  percentComplete?: number;
+}
+
 /**
  * Poll a long-running operation until completion.
+ * Default timeout: 60 attempts × 3s = ~3 minutes (Fabric ontology creation
+ * provisions Lakehouse + SQL endpoint + GraphModel and can take 60-90s).
  */
 async function pollOperation(
   operationId: string,
   token: string,
-  maxAttempts = 20,
-  intervalMs = 2000,
+  maxAttempts = 60,
+  intervalMs = 3000,
+  onProgress?: (progress: PollProgress) => void,
 ): Promise<void> {
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(resolve => setTimeout(resolve, intervalMs));
@@ -320,23 +490,44 @@ async function pollOperation(
 
     if (res.ok) {
       const body = await res.json();
+      onProgress?.({
+        attempt: i + 1,
+        maxAttempts,
+        status: body.status,
+        percentComplete: body.percentComplete,
+      });
+
       if (body.status === 'Succeeded') return;
       if (body.status === 'Failed') {
+        const errorMsg = body.error?.message ?? 'Operation failed';
+        const errorCode = body.error?.errorCode;
         throw new FabricApiError(
-          body.error?.message ?? 'Operation failed',
-          400,
-          body.error?.errorCode,
+          errorMsg,
+          body.error?.statusCode ?? 400,
+          errorCode,
         );
+      }
+
+      // Respect Retry-After header if present
+      const retryAfter = res.headers.get('Retry-After');
+      if (retryAfter) {
+        const delaySec = parseInt(retryAfter, 10);
+        if (!isNaN(delaySec) && delaySec > 0) {
+          await new Promise(resolve => setTimeout(resolve, delaySec * 1000));
+        }
       }
       // Still running — continue polling
     } else if (res.status === 202) {
-      // Still in progress
+      onProgress?.({ attempt: i + 1, maxAttempts, status: 'Running' });
       continue;
     } else {
       throw new FabricApiError(`Failed to poll operation: ${res.status}`, res.status);
     }
   }
-  throw new FabricApiError('Operation timed out', 408);
+  throw new FabricApiError(
+    'Operation timed out after 3 minutes. The ontology may still be provisioning — check your Fabric workspace.',
+    408,
+  );
 }
 
 // ─── Public API ────────────────────────────────────────────────────────────
@@ -357,16 +548,35 @@ export async function listOntologies(
 
 /**
  * Create a new ontology in a Fabric workspace and push its definition.
+ * If an ontology with the same name already exists, appends a numeric suffix.
  */
 export async function createOntology(
   workspaceId: string,
   token: string,
   ontology: Ontology,
+  onProgress?: (progress: PollProgress) => void,
 ): Promise<FabricOntologyResponse> {
+  // Preflight validation — catch data issues before hitting Fabric
+  validateForFabric(ontology);
+
   const { definition } = convertToFabricParts(ontology);
 
+  // Deduplicate display name to avoid 500 from Fabric on name collision
+  let displayName = sanitizeItemName(ontology.name);
+  try {
+    const existing = await listOntologies(workspaceId, token);
+    const existingNames = new Set(existing.map(o => o.displayName));
+    if (existingNames.has(displayName)) {
+      let suffix = 2;
+      while (existingNames.has(`${displayName}_${suffix}`)) suffix++;
+      displayName = `${displayName}_${suffix}`.slice(0, 89);
+    }
+  } catch {
+    // If listing fails, proceed with the original name
+  }
+
   const body: CreateOntologyRequest = {
-    displayName: sanitizeName(ontology.name),
+    displayName,
     description: (ontology.description ?? '').slice(0, 256),
     definition,
   };
@@ -379,7 +589,7 @@ export async function createOntology(
 
   // If 202 (long-running), poll until complete
   if (result.operationId) {
-    await pollOperation(result.operationId, token);
+    await pollOperation(result.operationId, token, 60, 3000, onProgress);
     // Fetch the created ontology — the operation doesn't return it
     const ontologies = await listOntologies(workspaceId, token);
     const created = ontologies.find(o => o.displayName === body.displayName);
@@ -398,16 +608,19 @@ export async function updateOntologyDefinition(
   ontologyId: string,
   token: string,
   ontology: Ontology,
+  onProgress?: (progress: PollProgress) => void,
 ): Promise<void> {
+  validateForFabric(ontology);
+
   const { definition } = convertToFabricParts(ontology);
 
   const result = await fabricFetch<void>(
-    `/workspaces/${encodeURIComponent(workspaceId)}/ontologies/${encodeURIComponent(ontologyId)}/updateDefinition`,
+    `/workspaces/${encodeURIComponent(workspaceId)}/ontologies/${encodeURIComponent(ontologyId)}/updateDefinition?updateMetadata=true`,
     token,
     { method: 'POST', body: JSON.stringify({ definition }) },
   );
 
   if (result.operationId) {
-    await pollOperation(result.operationId, token);
+    await pollOperation(result.operationId, token, 60, 3000, onProgress);
   }
 }

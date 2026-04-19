@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { convertToFabricParts } from './fabric';
+import { convertToFabricParts, validateForFabric, FabricValidationError } from './fabric';
 import type { Ontology } from '../data/ontology';
 
 function decode(base64: string): unknown {
@@ -82,7 +82,6 @@ describe('convertToFabricParts', () => {
     const { definition } = convertToFabricParts(minimalOntology);
     const entityParts = definition.parts.filter(p => p.path.startsWith('EntityTypes/'));
 
-    // Find the Customer entity part
     const customerPart = entityParts.find(p => {
       const decoded = decode(p.payload) as { name: string };
       return decoded.name === 'Customer';
@@ -137,12 +136,13 @@ describe('convertToFabricParts', () => {
 
     const customer = decode(customerPart!.payload) as {
       entityIdParts: string[];
-      displayNamePropertyId: string;
+      displayNamePropertyId: string | null;
       properties: Array<{ id: string; name: string }>;
     };
 
     const customerIdProp = customer.properties.find(p => p.name === 'customerId');
     expect(customer.entityIdParts).toEqual([customerIdProp!.id]);
+    // displayNamePropertyId should be set to the identifier property's ID (per Fabric spec)
     expect(customer.displayNamePropertyId).toBe(customerIdProp!.id);
   });
 
@@ -161,7 +161,7 @@ describe('convertToFabricParts', () => {
     expect(rel.target.entityTypeId).toBe(entityIdMap.get('order'));
   });
 
-  it('skips relationships referencing unknown entities', () => {
+  it('throws for relationships referencing unknown entities', () => {
     const ontologyWithBadRel: Ontology = {
       ...minimalOntology,
       relationships: [
@@ -176,11 +176,7 @@ describe('convertToFabricParts', () => {
       ],
     };
 
-    const { definition } = convertToFabricParts(ontologyWithBadRel);
-    const relParts = definition.parts.filter(p => p.path.startsWith('RelationshipTypes/'));
-
-    // Only the valid relationship should be included
-    expect(relParts).toHaveLength(1);
+    expect(() => convertToFabricParts(ontologyWithBadRel)).toThrow(/nonexistent/);
   });
 
   it('generates unique numeric IDs', () => {
@@ -192,9 +188,7 @@ describe('convertToFabricParts', () => {
       return match?.[1];
     });
 
-    // All IDs should be unique
     expect(new Set(ids).size).toBe(ids.length);
-    // All IDs should be numeric strings
     ids.forEach(id => expect(id).toMatch(/^\d+$/));
   });
 
@@ -221,21 +215,25 @@ describe('convertToFabricParts', () => {
     const entityPart = definition.parts.find(p => p.path.startsWith('EntityTypes/'));
     const entity = decode(entityPart!.payload) as { name: string; properties: Array<{ name: string }> };
 
-    // Names should be sanitized: no spaces, parens, or exclamation marks
     expect(entity.name).toMatch(/^[a-zA-Z][a-zA-Z0-9_-]*$/);
     expect(entity.properties[0].name).toMatch(/^[a-zA-Z][a-zA-Z0-9_-]*$/);
   });
 
-  it('platform part contains correct metadata', () => {
+  it('platform part contains correct metadata with $schema', () => {
     const { definition } = convertToFabricParts(minimalOntology);
     const platformPart = definition.parts.find(p => p.path === '.platform');
+    expect(platformPart).toBeDefined();
 
     const platform = decode(platformPart!.payload) as {
+      $schema: string;
       metadata: { type: string; displayName: string };
+      config: { version: string; logicalId: string };
     };
 
+    expect(platform.$schema).toContain('platformProperties');
     expect(platform.metadata.type).toBe('Ontology');
-    expect(platform.metadata.displayName).toBe('Test Ontology');
+    expect(platform.metadata.displayName).toBe('Test_Ontology');
+    expect(platform.config.version).toBe('2.0');
   });
 
   it('definition.json part is empty object', () => {
@@ -246,7 +244,7 @@ describe('convertToFabricParts', () => {
     expect(defContent).toEqual({});
   });
 
-  it('handles ontology with no properties gracefully', () => {
+  it('injects synthetic Id property for entities with no properties', () => {
     const ontology: Ontology = {
       name: 'Empty',
       description: '',
@@ -266,11 +264,183 @@ describe('convertToFabricParts', () => {
     const { definition } = convertToFabricParts(ontology);
     const entityPart = definition.parts.find(p => p.path.startsWith('EntityTypes/'));
     const entity = decode(entityPart!.payload) as {
-      properties: unknown[];
-      entityIdParts: unknown[];
+      properties: { name: string; valueType: string }[];
+      entityIdParts: string[];
+      displayNamePropertyId: string | null;
     };
 
-    expect(entity.properties).toHaveLength(0);
-    expect(entity.entityIdParts).toHaveLength(0);
+    // Entities with no properties get a synthetic "Id" property so Fabric can import them
+    expect(entity.properties).toHaveLength(1);
+    expect(entity.properties[0].name).toBe('Id');
+    expect(entity.properties[0].valueType).toBe('String');
+    expect(entity.entityIdParts).toHaveLength(1);
+    expect(entity.displayNamePropertyId).toBe(entity.entityIdParts[0]);
+  });
+
+  it('disambiguates cross-entity property name conflicts with different types', () => {
+    const ontology: Ontology = {
+      name: 'ConflictTest',
+      description: '',
+      entityTypes: [
+        {
+          id: 'a', name: 'Policy', description: '', icon: '📦', color: '#000',
+          properties: [
+            { name: 'id', type: 'string', isIdentifier: true },
+            { name: 'severity', type: 'string' },  // String
+          ],
+        },
+        {
+          id: 'b', name: 'Failure', description: '', icon: '📦', color: '#000',
+          properties: [
+            { name: 'id', type: 'string', isIdentifier: true },
+            { name: 'severity', type: 'integer' },  // BigInt — conflicts!
+          ],
+        },
+      ],
+      relationships: [],
+    };
+
+    const { definition } = convertToFabricParts(ontology);
+    const entityParts = definition.parts.filter(p => p.path.startsWith('EntityTypes/'));
+
+    const policyPart = entityParts.find(p => {
+      const d = decode(p.payload) as { name: string };
+      return d.name === 'Policy';
+    });
+    const failurePart = entityParts.find(p => {
+      const d = decode(p.payload) as { name: string };
+      return d.name === 'Failure';
+    });
+
+    const policySeverity = (decode(policyPart!.payload) as { properties: { name: string }[] }).properties.find(p => p.name.startsWith('severity'));
+    const failureSeverity = (decode(failurePart!.payload) as { properties: { name: string }[] }).properties.find(p => p.name.startsWith('severity'));
+
+    expect(policySeverity).toBeDefined();
+    expect(failureSeverity).toBeDefined();
+    expect(policySeverity!.name).not.toBe(failureSeverity!.name);
+    expect(policySeverity!.name).toBe('severity_Policy');
+    expect(failureSeverity!.name).toBe('severity_Failure');
+  });
+
+  it('disambiguates duplicate relationship names by appending source entity name', () => {
+    const ontology: Ontology = {
+      name: 'RelDupTest',
+      description: '',
+      entityTypes: [
+        { id: 'policy', name: 'MaintenancePolicy', description: '', icon: '📦', color: '#000', properties: [{ name: 'id', type: 'string', isIdentifier: true }] },
+        { id: 'bulletin', name: 'OEMBulletin', description: '', icon: '📦', color: '#000', properties: [{ name: 'id', type: 'string', isIdentifier: true }] },
+        { id: 'gen', name: 'Generator', description: '', icon: '📦', color: '#000', properties: [{ name: 'id', type: 'string', isIdentifier: true }] },
+      ],
+      relationships: [
+        { id: 'r1', name: 'applies_to', from: 'policy', to: 'gen', cardinality: 'one-to-many' },
+        { id: 'r2', name: 'applies_to', from: 'bulletin', to: 'gen', cardinality: 'one-to-many' },
+      ],
+    };
+
+    const { definition } = convertToFabricParts(ontology);
+    const relParts = definition.parts.filter(p => p.path.startsWith('RelationshipTypes/'));
+    expect(relParts).toHaveLength(2);
+
+    const relNames = relParts.map(p => (decode(p.payload) as { name: string }).name);
+    expect(relNames).toContain('applies_to_MaintenancePolicy');
+    expect(relNames).toContain('applies_to_OEMBulletin');
+    expect(new Set(relNames).size).toBe(2);
+  });
+
+  it('returns propertyIdMap and entityNameMap in ConversionResult', () => {
+    const { propertyIdMap, entityNameMap } = convertToFabricParts(minimalOntology);
+
+    expect(entityNameMap.get('customer')).toBe('Customer');
+    expect(entityNameMap.get('order')).toBe('Order');
+
+    const customerProps = propertyIdMap.get('customer');
+    expect(customerProps).toBeDefined();
+    expect(customerProps!.has('customerId')).toBe(true);
+    expect(customerProps!.has('email')).toBe(true);
+    expect(customerProps!.has('age')).toBe(true);
+  });
+});
+
+describe('validateForFabric', () => {
+  const validOntology: Ontology = {
+    name: 'Valid',
+    description: '',
+    entityTypes: [
+      { id: 'a', name: 'Alpha', description: '', icon: '📦', color: '#000', properties: [{ name: 'Id', type: 'string', isIdentifier: true }] },
+      { id: 'b', name: 'Beta', description: '', icon: '📦', color: '#000', properties: [{ name: 'Id', type: 'string', isIdentifier: true }] },
+    ],
+    relationships: [{ id: 'r1', name: 'links', from: 'a', to: 'b', cardinality: 'one-to-many' }],
+  };
+
+  it('passes for valid ontology', () => {
+    expect(() => validateForFabric(validOntology)).not.toThrow();
+  });
+
+  it('detects duplicate entity names after sanitization', () => {
+    const dup: Ontology = {
+      ...validOntology,
+      entityTypes: [
+        { id: 'a', name: 'Wind Turbine', description: '', icon: '📦', color: '#000', properties: [] },
+        { id: 'b', name: 'Wind-Turbine', description: '', icon: '📦', color: '#000', properties: [] },
+      ],
+      relationships: [],
+    };
+    expect(() => validateForFabric(dup)).toThrow(/collision/i);
+  });
+
+  it('detects duplicate property names after sanitization', () => {
+    const dup: Ontology = {
+      ...validOntology,
+      entityTypes: [
+        {
+          id: 'a', name: 'Thing', description: '', icon: '📦', color: '#000',
+          properties: [
+            { name: 'my prop', type: 'string' },
+            { name: 'my-prop', type: 'string' },
+          ],
+        },
+      ],
+      relationships: [],
+    };
+    expect(() => validateForFabric(dup)).toThrow(/collision/i);
+  });
+
+  it('detects unresolved relationship refs', () => {
+    const bad: Ontology = {
+      ...validOntology,
+      relationships: [{ id: 'r1', name: 'broken', from: 'a', to: 'missing', cardinality: 'one-to-many' }],
+    };
+    expect(() => validateForFabric(bad)).toThrow(/unknown/i);
+  });
+
+  it('allows duplicate relationship names (auto-disambiguated by convertToFabricParts)', () => {
+    const dup: Ontology = {
+      ...validOntology,
+      relationships: [
+        { id: 'r1', name: 'has items', from: 'a', to: 'b', cardinality: 'one-to-many' },
+        { id: 'r2', name: 'has-items', from: 'a', to: 'b', cardinality: 'one-to-many' },
+      ],
+    };
+    expect(() => validateForFabric(dup)).not.toThrow();
+  });
+
+  it('detects duplicate entity IDs', () => {
+    const dup: Ontology = {
+      ...validOntology,
+      entityTypes: [
+        { id: 'same', name: 'Alpha', description: '', icon: '📦', color: '#000', properties: [] },
+        { id: 'same', name: 'Beta', description: '', icon: '📦', color: '#000', properties: [] },
+      ],
+      relationships: [],
+    };
+    expect(() => validateForFabric(dup)).toThrow(/Duplicate entity ID/i);
+  });
+
+  it('throws FabricValidationError (not FabricApiError)', () => {
+    const bad: Ontology = {
+      ...validOntology,
+      relationships: [{ id: 'r1', name: 'broken', from: 'a', to: 'missing', cardinality: 'one-to-many' }],
+    };
+    expect(() => validateForFabric(bad)).toThrow(FabricValidationError);
   });
 });
