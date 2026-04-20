@@ -1178,6 +1178,7 @@ export async function createOntologyWithData(
   sampleTables: Map<string, import('../data/ontology').EntityInstance[]>,
   onProgress?: (progress: PollProgress) => void,
   onStatus?: (message: string) => void,
+  options?: { includeDataAgent?: boolean },
 ): Promise<FabricOntologyResponse> {
   // Step 1: Validate, convert, and generate edge tables
   validateForFabric(ontology);
@@ -1356,6 +1357,25 @@ export async function createOntologyWithData(
   } catch (err) {
     console.warn('GraphModel population failed (non-fatal):', err);
     onStatus?.('⚠ Graph model population failed — ontology and data are still available');
+  }
+
+  // Step 9: Create a Data Agent connected to the ontology (optional)
+  if (options?.includeDataAgent) {
+    onStatus?.('Creating Data Agent…');
+    try {
+      const { createDataAgent } = await import('./fabricDataAgent');
+      await createDataAgent(
+        workspaceId,
+        fabricToken,
+        displayName,
+        created.id,
+        ontology,
+        onStatus,
+      );
+    } catch (err) {
+      console.warn('Data Agent creation failed (non-fatal):', err);
+      onStatus?.('⚠ Data Agent creation failed — ontology and data are still available');
+    }
   }
 
   onStatus?.('✓ Ontology ready with sample data and graph');

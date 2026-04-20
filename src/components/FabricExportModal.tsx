@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Cloud, Loader2, CheckCircle, AlertCircle, RefreshCw, LogIn, FolderOpen, Database } from 'lucide-react';
+import { X, Cloud, Loader2, CheckCircle, AlertCircle, RefreshCw, LogIn, FolderOpen, Database, Bot } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import {
   createOntology,
@@ -46,6 +46,7 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
   const [ontologiesLoading, setOntologiesLoading] = useState(false);
   const [pollProgress, setPollProgress] = useState<PollProgress | null>(null);
   const [includeSampleData, setIncludeSampleData] = useState(true);
+  const [includeDataAgent, setIncludeDataAgent] = useState(true);
   const [statusMessage, setStatusMessage] = useState('');
 
   // Try to get token silently on mount (user may already be signed in)
@@ -183,6 +184,7 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
           sampleData.tables,
           onProgress,
           (msg) => setStatusMessage(msg),
+          { includeDataAgent: includeDataAgent },
         );
         setResult(created);
       } else if (mode === 'create') {
@@ -215,7 +217,7 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
       }
       setStep('error');
     }
-  }, [mode, selectedWorkspace, token, currentOntology, selectedOntologyId, existingOntologies, includeSampleData]);
+  }, [mode, selectedWorkspace, token, currentOntology, selectedOntologyId, existingOntologies, includeSampleData, includeDataAgent]);
 
   const handleCopyDebug = useCallback(() => {
     // Copy the exact POST body that would be sent to Fabric
@@ -477,6 +479,31 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
                       <div style={{ fontWeight: 600 }}>Include sample data</div>
                       <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
                         Upload realistic data to the Lakehouse and bind to the graph
+                      </div>
+                    </div>
+                  </label>
+                )}
+
+                {mode === 'create' && includeSampleData && (
+                  <label style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    marginBottom: 16, padding: '10px 12px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: `2px solid ${includeDataAgent ? 'var(--ms-blue)' : 'var(--border-primary)'}`,
+                    background: includeDataAgent ? 'rgba(0, 102, 179, 0.08)' : 'var(--bg-secondary)',
+                    cursor: 'pointer', fontSize: 13,
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={includeDataAgent}
+                      onChange={(e) => setIncludeDataAgent(e.target.checked)}
+                      style={{ accentColor: 'var(--ms-blue)', width: 16, height: 16 }}
+                    />
+                    <Bot size={16} style={{ color: 'var(--ms-blue)', flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontWeight: 600 }}>Connect Data Agent</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+                        Create an AI agent for natural language queries over the ontology
                       </div>
                     </div>
                   </label>
