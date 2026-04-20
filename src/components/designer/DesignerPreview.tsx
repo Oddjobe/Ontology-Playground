@@ -91,7 +91,7 @@ function GraphPreview({ ontology, darkMode, onSelectEntity, onSelectRelationship
             'text-valign': 'bottom',
             'text-halign': 'center',
             'font-size': '13px',
-            'font-family': 'Segoe UI, sans-serif',
+            'font-family': 'Vattenfall Hall, Helvetica, sans-serif',
             'font-weight': 600,
             color: themeColors.nodeText,
             'text-margin-y': 8,
@@ -108,7 +108,7 @@ function GraphPreview({ ontology, darkMode, onSelectEntity, onSelectRelationship
           style: {
             label: 'data(label)',
             'font-size': '11px',
-            'font-family': 'Segoe UI, sans-serif',
+            'font-family': 'Vattenfall Hall, Helvetica, sans-serif',
             color: themeColors.edgeText,
             'text-rotation': 'autorotate',
             'text-margin-y': -8,

@@ -110,7 +110,7 @@ export function OntologyGraph() {
             'text-valign': 'bottom',
             'text-halign': 'center',
             'font-size': '14px',
-            'font-family': 'Segoe UI, sans-serif',
+            'font-family': 'Vattenfall Hall, Helvetica, sans-serif',
             'font-weight': 600,
             'color': initialThemeColors.current.nodeText,
             'text-margin-y': 10,
@@ -129,7 +129,7 @@ export function OntologyGraph() {
           selector: 'node:selected',
           style: {
             'border-width': 5,
-            'border-color': '#0078D4',
+            'border-color': '#0066B3',
             'width': 85,
             'height': 85
           }
@@ -139,7 +139,7 @@ export function OntologyGraph() {
           selector: 'node.highlighted',
           style: {
             'border-width': 4,
-            'border-color': '#FFB900',
+            'border-color': '#FFD100',
             'width': 80,
             'height': 80
           }
@@ -157,8 +157,7 @@ export function OntologyGraph() {
           style: {
             'label': 'data(label)',
             'font-size': '12px',
-            'font-family': 'Segoe UI, sans-serif',
-            'color': initialThemeColors.current.edgeText,
+            'font-family': 'Vattenfall Hall, Helvetica, sans-serif',
             'text-rotation': 'autorotate',
             'text-margin-y': -10,
             'width': 3,
@@ -177,9 +176,9 @@ export function OntologyGraph() {
           selector: 'edge:selected',
           style: {
             'width': 5,
-            'line-color': '#0078D4',
-            'target-arrow-color': '#0078D4',
-            'color': '#0078D4'
+            'line-color': '#0066B3',
+            'target-arrow-color': '#0066B3',
+            'color': '#0066B3'
           }
         },
         // Highlighted edge
@@ -187,9 +186,9 @@ export function OntologyGraph() {
           selector: 'edge.highlighted',
           style: {
             'width': 4,
-            'line-color': '#FFB900',
-            'target-arrow-color': '#FFB900',
-            'color': '#FFB900'
+            'line-color': '#FFD100',
+            'target-arrow-color': '#FFD100',
+            'color': '#FFD100'
           }
         },
         // Dimmed edge

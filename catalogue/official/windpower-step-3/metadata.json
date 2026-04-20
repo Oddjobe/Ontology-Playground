@@ -1,0 +1,8 @@
+{
+  "name": "Wind Power — Step 3: Grid Integration",
+  "description": "Adding GridConnection for power delivery and battery storage",
+  "icon": "⚡",
+  "category": "school",
+  "tags": ["energy", "wind-power", "school", "step-3"],
+  "author": "ontology-quest"
+}

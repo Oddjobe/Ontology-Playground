@@ -179,7 +179,7 @@ export function parseRDF(rdfXml: string): { ontology: Ontology; bindings: DataBi
     const label = getChildText(el, 'label', RDFS_NS) || className;
     const description = getChildText(el, 'comment', RDFS_NS) || '';
     const icon = getChildText(el, 'icon') || '📦';
-    const color = getChildText(el, 'color') || '#0078D4';
+    const color = getChildText(el, 'color') || '#0066B3';
 
     entityMap.set(about, {
       id: entityId,

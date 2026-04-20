@@ -63,7 +63,7 @@ export const cosmicCoffeeOntology: Ontology = {
       name: "Customer",
       description: "A person who purchases coffee products from our stores",
       icon: "👤",
-      color: "#0078D4", // Microsoft Blue
+      color: "#0066B3", // Vattenfall Blue
       properties: [
         { name: "customerId", type: "string", isIdentifier: true, description: "Unique customer identifier" },
         { name: "name", type: "string", description: "Full name of the customer" },
@@ -107,7 +107,7 @@ export const cosmicCoffeeOntology: Ontology = {
       name: "Store",
       description: "A physical coffee shop location",
       icon: "🏪",
-      color: "#FFB900", // Microsoft Yellow/Gold
+      color: "#FFD100", // Vattenfall Yellow
       properties: [
         { name: "storeId", type: "string", isIdentifier: true, description: "Unique store identifier" },
         { name: "name", type: "string", description: "Store name" },

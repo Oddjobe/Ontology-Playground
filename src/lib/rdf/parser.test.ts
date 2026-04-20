@@ -84,7 +84,7 @@ describe('parseRDF', () => {
 </rdf:RDF>`;
       const { ontology } = parseRDF(rdf);
       expect(ontology.entityTypes[0].icon).toBe('📦');
-      expect(ontology.entityTypes[0].color).toBe('#0078D4');
+      expect(ontology.entityTypes[0].color).toBe('#0066B3');
     });
   });
 

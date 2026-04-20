@@ -23,7 +23,7 @@ const sampleSchema = `{
         "name": "Entity Name",
         "description": "What this entity represents",
         "icon": "📦",
-        "color": "#0078D4",
+        "color": "#0066B3",
         "properties": [
           { "name": "id", "type": "string", "isIdentifier": true },
           { "name": "name", "type": "string" }

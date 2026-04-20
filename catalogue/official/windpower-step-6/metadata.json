@@ -1,0 +1,8 @@
+{
+  "name": "Wind Power — Step 6: Warranty & Financial Decisions",
+  "description": "WarrantyContract, WarrantyClaim, OEMBulletin, FinancialScenario, CostTable, and AEPBaseline for warranty tracking and business-impact analysis",
+  "icon": "💰",
+  "category": "energy",
+  "tags": ["energy", "wind-power", "warranty", "financials", "NPV", "AEP"],
+  "author": "ontology-quest"
+}

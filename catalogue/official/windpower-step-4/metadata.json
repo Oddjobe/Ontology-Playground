@@ -1,0 +1,8 @@
+{
+  "name": "Wind Power — Step 4: Maintenance & Sensors",
+  "description": "Generator, Bearing, SensorSignal, WorkOrder, and MaintenancePolicy for predictive maintenance",
+  "icon": "🔧",
+  "category": "energy",
+  "tags": ["energy", "wind-power", "maintenance", "sensors", "predictive", "SCADA"],
+  "author": "ontology-quest"
+}

@@ -30,7 +30,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
         <div className="modal-features">
           <div className="feature-card">
             <div className="feature-icon">
-              <Sparkles size={24} color="#0078D4" />
+              <Sparkles size={24} color="#0066B3" />
             </div>
             <div className="feature-title">Entity Types</div>
             <div className="feature-text">
@@ -60,7 +60,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
 
           <div className="feature-card">
             <div className="feature-icon">
-              <MessageSquare size={24} color="#FFB900" />
+              <MessageSquare size={24} color="#FFD100" />
             </div>
             <div className="feature-title">NL Queries</div>
             <div className="feature-text">

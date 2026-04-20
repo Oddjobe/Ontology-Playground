@@ -13,7 +13,7 @@ function readCatalogue() {
 }
 
 describe('catalogue compilation (end-to-end)', () => {
-  it('npm run catalogue:build succeeds with the real catalogue', () => {
+  it('npm run catalogue:build succeeds with the real catalogue', { timeout: 30000 }, () => {
     const result = execSync('npx tsx scripts/compile-catalogue.ts', {
       cwd: ROOT,
       encoding: 'utf-8',
@@ -23,8 +23,8 @@ describe('catalogue compilation (end-to-end)', () => {
     expect(result).toContain('official/ecommerce');
 
     const output = readCatalogue();
-    expect(output.count).toBe(48);
-    expect(output.entries).toHaveLength(48);
+    expect(output.count).toBe(54);
+    expect(output.entries).toHaveLength(54);
     expect(output.generatedAt).toBeTruthy();
   });
 
@@ -63,7 +63,7 @@ describe('catalogue compilation (end-to-end)', () => {
 
 describe('catalogue metadata validation', () => {
   it('all entries reference valid categories', () => {
-    const validCats = ['retail', 'healthcare', 'finance', 'manufacturing', 'education', 'general', 'food', 'media', 'events', 'iq-lab', 'school', 'fibo'];
+    const validCats = ['retail', 'healthcare', 'finance', 'manufacturing', 'education', 'general', 'food', 'media', 'events', 'energy', 'iq-lab', 'school', 'fibo'];
     for (const entry of readCatalogue().entries) {
       expect(validCats).toContain(entry.category);
     }

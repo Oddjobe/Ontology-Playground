@@ -1,0 +1,1468 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+    xml:base="http://example.org/ontology/windpower-step-6/"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:ont="http://example.org/ontology/windpower-step-6/">
+
+    <!-- Ontology Declaration -->
+    <owl:Ontology rdf:about="">
+        <rdfs:label>Wind Power Energy System – Step 6</rdfs:label>
+        <rdfs:comment>Complete wind power model with warranty management, OEM bulletin tracking, financial scenario simulation (repair/derate/run-to-failure), cost tables, and AEP baselines for business-impact analysis (Use Cases 4-5: Warranty Win and Health-to-Money).</rdfs:comment>
+    </owl:Ontology>
+
+    <!-- ======================== -->
+    <!-- Classes (inherited – Step 4) -->
+    <!-- ======================== -->
+
+    <owl:Class rdf:about="#WindFarm">
+        <rdfs:label>WindFarm</rdfs:label>
+        <rdfs:comment>A wind power installation containing multiple turbines</rdfs:comment>
+        <ont:icon>🏗️</ont:icon>
+        <ont:color>#0078D4</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#Turbine">
+        <rdfs:label>Turbine</rdfs:label>
+        <rdfs:comment>An individual wind turbine that converts wind energy to electricity</rdfs:comment>
+        <ont:icon>🌬️</ont:icon>
+        <ont:color>#FFB900</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#ProductionRecord">
+        <rdfs:label>ProductionRecord</rdfs:label>
+        <rdfs:comment>A time-series record of energy output from a turbine</rdfs:comment>
+        <ont:icon>📊</ont:icon>
+        <ont:color>#00B7C3</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#EnvironmentalAssessment">
+        <rdfs:label>EnvironmentalAssessment</rdfs:label>
+        <rdfs:comment>An environmental impact assessment for a wind farm</rdfs:comment>
+        <ont:icon>🌿</ont:icon>
+        <ont:color>#107C10</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#GridConnection">
+        <rdfs:label>GridConnection</rdfs:label>
+        <rdfs:comment>A connection point to the electricity transmission grid</rdfs:comment>
+        <ont:icon>⚡</ont:icon>
+        <ont:color>#E74856</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#Generator">
+        <rdfs:label>Generator</rdfs:label>
+        <rdfs:comment>The electrical generator inside a wind turbine nacelle that converts rotational energy to electricity</rdfs:comment>
+        <ont:icon>⚙️</ont:icon>
+        <ont:color>#8B5CF6</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#Bearing">
+        <rdfs:label>Bearing</rdfs:label>
+        <rdfs:comment>A mechanical bearing supporting the generator shaft; a key wear component monitored for predictive maintenance</rdfs:comment>
+        <ont:icon>🔩</ont:icon>
+        <ont:color>#6B7280</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#SensorSignal">
+        <rdfs:label>SensorSignal</rdfs:label>
+        <rdfs:comment>A SCADA time-series measurement from a turbine sensor (vibration, temperature, current)</rdfs:comment>
+        <ont:icon>📡</ont:icon>
+        <ont:color>#EF4444</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#WorkOrder">
+        <rdfs:label>WorkOrder</rdfs:label>
+        <rdfs:comment>A maintenance notification or work order (maps to SAP S/4HANA notification/order)</rdfs:comment>
+        <ont:icon>📋</ont:icon>
+        <ont:color>#F59E0B</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#MaintenancePolicy">
+        <rdfs:label>MaintenancePolicy</rdfs:label>
+        <rdfs:comment>An IQ policy rule that defines conditions and recommended actions for condition-based maintenance</rdfs:comment>
+        <ont:icon>📜</ont:icon>
+        <ont:color>#10B981</ont:color>
+    </owl:Class>
+
+    <!-- ======================== -->
+    <!-- Classes (inherited – Step 5) -->
+    <!-- ======================== -->
+
+    <owl:Class rdf:about="#WeatherWindow">
+        <rdfs:label>WeatherWindow</rdfs:label>
+        <rdfs:comment>A forecasted time window with acceptable weather conditions for offshore maintenance operations</rdfs:comment>
+        <ont:icon>🌊</ont:icon>
+        <ont:color>#0284C7</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#CrewShift">
+        <rdfs:label>CrewShift</rdfs:label>
+        <rdfs:comment>A scheduled work shift for a maintenance crew, including vessel and certification details</rdfs:comment>
+        <ont:icon>👷</ont:icon>
+        <ont:color>#7C3AED</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#ScheduleSlot">
+        <rdfs:label>ScheduleSlot</rdfs:label>
+        <rdfs:comment>A planned maintenance time slot that aligns a work order with a weather window and crew shift</rdfs:comment>
+        <ont:icon>📅</ont:icon>
+        <ont:color>#2563EB</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#FailureMode">
+        <rdfs:label>FailureMode</rdfs:label>
+        <rdfs:comment>An FMECA failure mode describing how a component can fail, its effects, and detection methods</rdfs:comment>
+        <ont:icon>⚠️</ont:icon>
+        <ont:color>#DC2626</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#FleetAlert">
+        <rdfs:label>FleetAlert</rdfs:label>
+        <rdfs:comment>A cross-fleet intelligence alert triggered when similar failure patterns are detected across multiple turbines</rdfs:comment>
+        <ont:icon>🔔</ont:icon>
+        <ont:color>#D97706</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#HSEPolicy">
+        <rdfs:label>HSEPolicy</rdfs:label>
+        <rdfs:comment>A Health, Safety &amp; Environment policy defining operational limits and safety requirements for maintenance activities</rdfs:comment>
+        <ont:icon>🛡️</ont:icon>
+        <ont:color>#059669</ont:color>
+    </owl:Class>
+
+    <!-- ======================== -->
+    <!-- Classes (new – Step 6)  -->
+    <!-- ======================== -->
+
+    <owl:Class rdf:about="#WarrantyContract">
+        <rdfs:label>WarrantyContract</rdfs:label>
+        <rdfs:comment>An OEM warranty contract covering specific turbine components with defined terms, claim deadlines, and covered parts</rdfs:comment>
+        <ont:icon>📃</ont:icon>
+        <ont:color>#7C3AED</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#WarrantyClaim">
+        <rdfs:label>WarrantyClaim</rdfs:label>
+        <rdfs:comment>A warranty claim filed against an OEM contract, referencing a work order as evidence</rdfs:comment>
+        <ont:icon>💼</ont:icon>
+        <ont:color>#4F46E5</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#OEMBulletin">
+        <rdfs:label>OEMBulletin</rdfs:label>
+        <rdfs:comment>A technical bulletin issued by an OEM regarding known issues, recalls, or recommended actions for specific turbine models</rdfs:comment>
+        <ont:icon>📰</ont:icon>
+        <ont:color>#0EA5E9</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#FinancialScenario">
+        <rdfs:label>FinancialScenario</rdfs:label>
+        <rdfs:comment>A financial simulation scenario evaluating the business impact of repair, derate, or run-to-failure decisions on a work order</rdfs:comment>
+        <ont:icon>📈</ont:icon>
+        <ont:color>#16A34A</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#CostTable">
+        <rdfs:label>CostTable</rdfs:label>
+        <rdfs:comment>A cost line item (CapEx, OpEx, or spare part) used in financial scenario calculations</rdfs:comment>
+        <ont:icon>🧾</ont:icon>
+        <ont:color>#CA8A04</ont:color>
+    </owl:Class>
+
+    <owl:Class rdf:about="#AEPBaseline">
+        <rdfs:label>AEPBaseline</rdfs:label>
+        <rdfs:comment>An Annual Energy Production baseline for a turbine, used to quantify energy losses and revenue impact</rdfs:comment>
+        <ont:icon>⚡</ont:icon>
+        <ont:color>#EA580C</ont:color>
+    </owl:Class>
+
+    <!-- ================================ -->
+    <!-- Data Properties (inherited – Step 4: WindFarm) -->
+    <!-- ================================ -->
+
+    <owl:DatatypeProperty rdf:about="#farmId">
+        <rdfs:label>farmId</rdfs:label>
+        <rdfs:domain rdf:resource="#WindFarm"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#farmName">
+        <rdfs:label>name</rdfs:label>
+        <rdfs:domain rdf:resource="#WindFarm"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#farmType">
+        <rdfs:label>type</rdfs:label>
+        <rdfs:domain rdf:resource="#WindFarm"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#country">
+        <rdfs:label>country</rdfs:label>
+        <rdfs:domain rdf:resource="#WindFarm"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#capacityMW">
+        <rdfs:label>capacityMW</rdfs:label>
+        <rdfs:domain rdf:resource="#WindFarm"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#commissionYear">
+        <rdfs:label>commissionYear</rdfs:label>
+        <rdfs:domain rdf:resource="#WindFarm"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 4: Turbine) -->
+
+    <owl:DatatypeProperty rdf:about="#turbineId">
+        <rdfs:label>turbineId</rdfs:label>
+        <rdfs:domain rdf:resource="#Turbine"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#model">
+        <rdfs:label>model</rdfs:label>
+        <rdfs:domain rdf:resource="#Turbine"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#ratedPowerMW">
+        <rdfs:label>ratedPowerMW</rdfs:label>
+        <rdfs:domain rdf:resource="#Turbine"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#hubHeightM">
+        <rdfs:label>hubHeightM</rdfs:label>
+        <rdfs:domain rdf:resource="#Turbine"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#rotorDiameterM">
+        <rdfs:label>rotorDiameterM</rdfs:label>
+        <rdfs:domain rdf:resource="#Turbine"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#turbineStatus">
+        <rdfs:label>status</rdfs:label>
+        <rdfs:domain rdf:resource="#Turbine"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 4: ProductionRecord) -->
+
+    <owl:DatatypeProperty rdf:about="#recordId">
+        <rdfs:label>recordId</rdfs:label>
+        <rdfs:domain rdf:resource="#ProductionRecord"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#periodStart">
+        <rdfs:label>periodStart</rdfs:label>
+        <rdfs:domain rdf:resource="#ProductionRecord"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#periodEnd">
+        <rdfs:label>periodEnd</rdfs:label>
+        <rdfs:domain rdf:resource="#ProductionRecord"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#energyMWh">
+        <rdfs:label>energyMWh</rdfs:label>
+        <rdfs:domain rdf:resource="#ProductionRecord"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#capacityFactor">
+        <rdfs:label>capacityFactor</rdfs:label>
+        <rdfs:domain rdf:resource="#ProductionRecord"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#availability">
+        <rdfs:label>availability</rdfs:label>
+        <rdfs:domain rdf:resource="#ProductionRecord"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 4: EnvironmentalAssessment) -->
+
+    <owl:DatatypeProperty rdf:about="#assessmentId">
+        <rdfs:label>assessmentId</rdfs:label>
+        <rdfs:domain rdf:resource="#EnvironmentalAssessment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#assessmentDate">
+        <rdfs:label>assessmentDate</rdfs:label>
+        <rdfs:domain rdf:resource="#EnvironmentalAssessment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#co2AvoidedTonnes">
+        <rdfs:label>co2AvoidedTonnes</rdfs:label>
+        <rdfs:domain rdf:resource="#EnvironmentalAssessment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#birdIncidents">
+        <rdfs:label>birdIncidents</rdfs:label>
+        <rdfs:domain rdf:resource="#EnvironmentalAssessment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#noiseDecibelLevel">
+        <rdfs:label>noiseDecibelLevel</rdfs:label>
+        <rdfs:domain rdf:resource="#EnvironmentalAssessment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#complianceStatus">
+        <rdfs:label>complianceStatus</rdfs:label>
+        <rdfs:domain rdf:resource="#EnvironmentalAssessment"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 4: GridConnection) -->
+
+    <owl:DatatypeProperty rdf:about="#connectionId">
+        <rdfs:label>connectionId</rdfs:label>
+        <rdfs:domain rdf:resource="#GridConnection"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#substationName">
+        <rdfs:label>substationName</rdfs:label>
+        <rdfs:domain rdf:resource="#GridConnection"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#voltageKV">
+        <rdfs:label>voltageKV</rdfs:label>
+        <rdfs:domain rdf:resource="#GridConnection"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#transmissionCapacityMW">
+        <rdfs:label>transmissionCapacityMW</rdfs:label>
+        <rdfs:domain rdf:resource="#GridConnection"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#connectionDate">
+        <rdfs:label>connectionDate</rdfs:label>
+        <rdfs:domain rdf:resource="#GridConnection"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#hasStorageBattery">
+        <rdfs:label>hasStorageBattery</rdfs:label>
+        <rdfs:domain rdf:resource="#GridConnection"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+        <ont:propertyType>boolean</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 4: Generator) -->
+
+    <owl:DatatypeProperty rdf:about="#generatorId">
+        <rdfs:label>generatorId</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#generatorModel">
+        <rdfs:label>generatorModel</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#serialNumber">
+        <rdfs:label>serialNumber</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#operatingHours">
+        <rdfs:label>operatingHours</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#startStopCount">
+        <rdfs:label>startStopCount</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#generatorStatus">
+        <rdfs:label>status</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#healthScore">
+        <rdfs:label>healthScore</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 4: Bearing) -->
+
+    <owl:DatatypeProperty rdf:about="#bearingId">
+        <rdfs:label>bearingId</rdfs:label>
+        <rdfs:domain rdf:resource="#Bearing"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#bearingPosition">
+        <rdfs:label>position</rdfs:label>
+        <rdfs:domain rdf:resource="#Bearing"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#installDate">
+        <rdfs:label>installDate</rdfs:label>
+        <rdfs:domain rdf:resource="#Bearing"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#expectedLifeHours">
+        <rdfs:label>expectedLifeHours</rdfs:label>
+        <rdfs:domain rdf:resource="#Bearing"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#bearingCondition">
+        <rdfs:label>condition</rdfs:label>
+        <rdfs:domain rdf:resource="#Bearing"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 4: SensorSignal) -->
+
+    <owl:DatatypeProperty rdf:about="#signalId">
+        <rdfs:label>signalId</rdfs:label>
+        <rdfs:domain rdf:resource="#SensorSignal"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#signalType">
+        <rdfs:label>signalType</rdfs:label>
+        <rdfs:domain rdf:resource="#SensorSignal"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#signalValue">
+        <rdfs:label>value</rdfs:label>
+        <rdfs:domain rdf:resource="#SensorSignal"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#signalTimestamp">
+        <rdfs:label>timestamp</rdfs:label>
+        <rdfs:domain rdf:resource="#SensorSignal"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <ont:propertyType>datetime</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#signalUnit">
+        <rdfs:label>unit</rdfs:label>
+        <rdfs:domain rdf:resource="#SensorSignal"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#signalQuality">
+        <rdfs:label>quality</rdfs:label>
+        <rdfs:domain rdf:resource="#SensorSignal"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 4: WorkOrder) -->
+
+    <owl:DatatypeProperty rdf:about="#orderId">
+        <rdfs:label>orderId</rdfs:label>
+        <rdfs:domain rdf:resource="#WorkOrder"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#orderType">
+        <rdfs:label>orderType</rdfs:label>
+        <rdfs:domain rdf:resource="#WorkOrder"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#orderPriority">
+        <rdfs:label>priority</rdfs:label>
+        <rdfs:domain rdf:resource="#WorkOrder"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#orderStatus">
+        <rdfs:label>status</rdfs:label>
+        <rdfs:domain rdf:resource="#WorkOrder"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#orderDescription">
+        <rdfs:label>description</rdfs:label>
+        <rdfs:domain rdf:resource="#WorkOrder"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#createdDate">
+        <rdfs:label>createdDate</rdfs:label>
+        <rdfs:domain rdf:resource="#WorkOrder"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#dueDate">
+        <rdfs:label>dueDate</rdfs:label>
+        <rdfs:domain rdf:resource="#WorkOrder"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#estimatedCostEUR">
+        <rdfs:label>estimatedCostEUR</rdfs:label>
+        <rdfs:domain rdf:resource="#WorkOrder"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 4: MaintenancePolicy) -->
+
+    <owl:DatatypeProperty rdf:about="#policyId">
+        <rdfs:label>policyId</rdfs:label>
+        <rdfs:domain rdf:resource="#MaintenancePolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#policyName">
+        <rdfs:label>name</rdfs:label>
+        <rdfs:domain rdf:resource="#MaintenancePolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#condition">
+        <rdfs:label>condition</rdfs:label>
+        <rdfs:domain rdf:resource="#MaintenancePolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#recommendedAction">
+        <rdfs:label>recommendedAction</rdfs:label>
+        <rdfs:domain rdf:resource="#MaintenancePolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#severity">
+        <rdfs:label>severity</rdfs:label>
+        <rdfs:domain rdf:resource="#MaintenancePolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- ================================ -->
+    <!-- Data Properties (inherited – Step 5: WeatherWindow) -->
+    <!-- ================================ -->
+
+    <owl:DatatypeProperty rdf:about="#weatherWindowId">
+        <rdfs:label>weatherWindowId</rdfs:label>
+        <rdfs:domain rdf:resource="#WeatherWindow"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#windowStart">
+        <rdfs:label>windowStart</rdfs:label>
+        <rdfs:domain rdf:resource="#WeatherWindow"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <ont:propertyType>datetime</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#windowEnd">
+        <rdfs:label>windowEnd</rdfs:label>
+        <rdfs:domain rdf:resource="#WeatherWindow"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <ont:propertyType>datetime</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#maxWaveHeightM">
+        <rdfs:label>maxWaveHeightM</rdfs:label>
+        <rdfs:domain rdf:resource="#WeatherWindow"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#maxWindSpeedMS">
+        <rdfs:label>maxWindSpeedMS</rdfs:label>
+        <rdfs:domain rdf:resource="#WeatherWindow"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#windowStatus">
+        <rdfs:label>windowStatus</rdfs:label>
+        <rdfs:domain rdf:resource="#WeatherWindow"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#weatherSource">
+        <rdfs:label>weatherSource</rdfs:label>
+        <rdfs:domain rdf:resource="#WeatherWindow"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 5: CrewShift) -->
+
+    <owl:DatatypeProperty rdf:about="#shiftId">
+        <rdfs:label>shiftId</rdfs:label>
+        <rdfs:domain rdf:resource="#CrewShift"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#crewName">
+        <rdfs:label>crewName</rdfs:label>
+        <rdfs:domain rdf:resource="#CrewShift"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#shiftStart">
+        <rdfs:label>shiftStart</rdfs:label>
+        <rdfs:domain rdf:resource="#CrewShift"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <ont:propertyType>datetime</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#shiftEnd">
+        <rdfs:label>shiftEnd</rdfs:label>
+        <rdfs:domain rdf:resource="#CrewShift"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <ont:propertyType>datetime</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#crewSize">
+        <rdfs:label>crewSize</rdfs:label>
+        <rdfs:domain rdf:resource="#CrewShift"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#certifications">
+        <rdfs:label>certifications</rdfs:label>
+        <rdfs:domain rdf:resource="#CrewShift"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#vesselName">
+        <rdfs:label>vesselName</rdfs:label>
+        <rdfs:domain rdf:resource="#CrewShift"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 5: ScheduleSlot) -->
+
+    <owl:DatatypeProperty rdf:about="#slotId">
+        <rdfs:label>slotId</rdfs:label>
+        <rdfs:domain rdf:resource="#ScheduleSlot"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#slotStartTime">
+        <rdfs:label>slotStartTime</rdfs:label>
+        <rdfs:domain rdf:resource="#ScheduleSlot"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <ont:propertyType>datetime</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#slotEndTime">
+        <rdfs:label>slotEndTime</rdfs:label>
+        <rdfs:domain rdf:resource="#ScheduleSlot"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <ont:propertyType>datetime</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#slotStatus">
+        <rdfs:label>slotStatus</rdfs:label>
+        <rdfs:domain rdf:resource="#ScheduleSlot"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#slotPriority">
+        <rdfs:label>slotPriority</rdfs:label>
+        <rdfs:domain rdf:resource="#ScheduleSlot"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 5: FailureMode) -->
+
+    <owl:DatatypeProperty rdf:about="#failureModeId">
+        <rdfs:label>failureModeId</rdfs:label>
+        <rdfs:domain rdf:resource="#FailureMode"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#failureModeName">
+        <rdfs:label>failureModeName</rdfs:label>
+        <rdfs:domain rdf:resource="#FailureMode"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#rpn">
+        <rdfs:label>rpn</rdfs:label>
+        <rdfs:domain rdf:resource="#FailureMode"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#failureEffect">
+        <rdfs:label>failureEffect</rdfs:label>
+        <rdfs:domain rdf:resource="#FailureMode"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#detectionMethod">
+        <rdfs:label>detectionMethod</rdfs:label>
+        <rdfs:domain rdf:resource="#FailureMode"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#occurrenceRate">
+        <rdfs:label>occurrenceRate</rdfs:label>
+        <rdfs:domain rdf:resource="#FailureMode"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 5: FleetAlert) -->
+
+    <owl:DatatypeProperty rdf:about="#alertId">
+        <rdfs:label>alertId</rdfs:label>
+        <rdfs:domain rdf:resource="#FleetAlert"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#alertTimestamp">
+        <rdfs:label>alertTimestamp</rdfs:label>
+        <rdfs:domain rdf:resource="#FleetAlert"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <ont:propertyType>datetime</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#alertSeverity">
+        <rdfs:label>alertSeverity</rdfs:label>
+        <rdfs:domain rdf:resource="#FleetAlert"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#alertMessage">
+        <rdfs:label>alertMessage</rdfs:label>
+        <rdfs:domain rdf:resource="#FleetAlert"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#affectedTurbineCount">
+        <rdfs:label>affectedTurbineCount</rdfs:label>
+        <rdfs:domain rdf:resource="#FleetAlert"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#alertStatus">
+        <rdfs:label>alertStatus</rdfs:label>
+        <rdfs:domain rdf:resource="#FleetAlert"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (inherited – Step 5: HSEPolicy) -->
+
+    <owl:DatatypeProperty rdf:about="#hsePolicyId">
+        <rdfs:label>hsePolicyId</rdfs:label>
+        <rdfs:domain rdf:resource="#HSEPolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#hsePolicyName">
+        <rdfs:label>hsePolicyName</rdfs:label>
+        <rdfs:domain rdf:resource="#HSEPolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#riskCategory">
+        <rdfs:label>riskCategory</rdfs:label>
+        <rdfs:domain rdf:resource="#HSEPolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#maxWaveHeightLimit">
+        <rdfs:label>maxWaveHeightLimit</rdfs:label>
+        <rdfs:domain rdf:resource="#HSEPolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#maxWindSpeedLimit">
+        <rdfs:label>maxWindSpeedLimit</rdfs:label>
+        <rdfs:domain rdf:resource="#HSEPolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#requiredPPE">
+        <rdfs:label>requiredPPE</rdfs:label>
+        <rdfs:domain rdf:resource="#HSEPolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#regulatoryRef">
+        <rdfs:label>regulatoryRef</rdfs:label>
+        <rdfs:domain rdf:resource="#HSEPolicy"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- ================================ -->
+    <!-- Data Properties (new – Step 6: WarrantyContract) -->
+    <!-- ================================ -->
+
+    <owl:DatatypeProperty rdf:about="#contractId">
+        <rdfs:label>contractId</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyContract"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#oemName">
+        <rdfs:label>oemName</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyContract"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#contractStartDate">
+        <rdfs:label>contractStartDate</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyContract"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#contractEndDate">
+        <rdfs:label>contractEndDate</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyContract"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#coveredComponents">
+        <rdfs:label>coveredComponents</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyContract"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#claimDeadlineDays">
+        <rdfs:label>claimDeadlineDays</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyContract"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#contractTerms">
+        <rdfs:label>contractTerms</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyContract"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (new – Step 6: WarrantyClaim) -->
+
+    <owl:DatatypeProperty rdf:about="#claimId">
+        <rdfs:label>claimId</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyClaim"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#claimStatus">
+        <rdfs:label>claimStatus</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyClaim"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#eligibleAmountEUR">
+        <rdfs:label>eligibleAmountEUR</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyClaim"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#evidencePackRef">
+        <rdfs:label>evidencePackRef</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyClaim"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#filedDate">
+        <rdfs:label>filedDate</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyClaim"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#claimDescription">
+        <rdfs:label>claimDescription</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyClaim"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (new – Step 6: OEMBulletin) -->
+
+    <owl:DatatypeProperty rdf:about="#bulletinId">
+        <rdfs:label>bulletinId</rdfs:label>
+        <rdfs:domain rdf:resource="#OEMBulletin"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#issueDate">
+        <rdfs:label>issueDate</rdfs:label>
+        <rdfs:domain rdf:resource="#OEMBulletin"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+        <ont:propertyType>date</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#affectedModels">
+        <rdfs:label>affectedModels</rdfs:label>
+        <rdfs:domain rdf:resource="#OEMBulletin"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#bulletinDescription">
+        <rdfs:label>bulletinDescription</rdfs:label>
+        <rdfs:domain rdf:resource="#OEMBulletin"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#actionRequired">
+        <rdfs:label>actionRequired</rdfs:label>
+        <rdfs:domain rdf:resource="#OEMBulletin"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (new – Step 6: FinancialScenario) -->
+
+    <owl:DatatypeProperty rdf:about="#scenarioId">
+        <rdfs:label>scenarioId</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#scenarioType">
+        <rdfs:label>scenarioType</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#energyLostMWh">
+        <rdfs:label>energyLostMWh</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#repairCostEUR">
+        <rdfs:label>repairCostEUR</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#downtimeHours">
+        <rdfs:label>downtimeHours</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#npvImpactEUR">
+        <rdfs:label>npvImpactEUR</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#lcoeImpact">
+        <rdfs:label>lcoeImpact</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#safetyRiskLevel">
+        <rdfs:label>safetyRiskLevel</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#recommendation">
+        <rdfs:label>recommendation</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (new – Step 6: CostTable) -->
+
+    <owl:DatatypeProperty rdf:about="#costItemId">
+        <rdfs:label>costItemId</rdfs:label>
+        <rdfs:domain rdf:resource="#CostTable"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#costCategory">
+        <rdfs:label>category</rdfs:label>
+        <rdfs:domain rdf:resource="#CostTable"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#itemDescription">
+        <rdfs:label>itemDescription</rdfs:label>
+        <rdfs:domain rdf:resource="#CostTable"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#unitCostEUR">
+        <rdfs:label>unitCostEUR</rdfs:label>
+        <rdfs:domain rdf:resource="#CostTable"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#leadTimeDays">
+        <rdfs:label>leadTimeDays</rdfs:label>
+        <rdfs:domain rdf:resource="#CostTable"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- Data Properties (new – Step 6: AEPBaseline) -->
+
+    <owl:DatatypeProperty rdf:about="#baselineId">
+        <rdfs:label>baselineId</rdfs:label>
+        <rdfs:domain rdf:resource="#AEPBaseline"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <ont:propertyType>string</ont:propertyType>
+        <ont:isIdentifier>true</ont:isIdentifier>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#baselineAEPMWh">
+        <rdfs:label>baselineAEPMWh</rdfs:label>
+        <rdfs:domain rdf:resource="#AEPBaseline"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#lossFactor">
+        <rdfs:label>lossFactor</rdfs:label>
+        <rdfs:domain rdf:resource="#AEPBaseline"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#referenceYear">
+        <rdfs:label>referenceYear</rdfs:label>
+        <rdfs:domain rdf:resource="#AEPBaseline"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+        <ont:propertyType>integer</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <owl:DatatypeProperty rdf:about="#priceEURPerMWh">
+        <rdfs:label>priceEURPerMWh</rdfs:label>
+        <rdfs:domain rdf:resource="#AEPBaseline"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+        <ont:propertyType>decimal</ont:propertyType>
+    </owl:DatatypeProperty>
+
+    <!-- ======================== -->
+    <!-- Object Properties (inherited – Step 4) -->
+    <!-- ======================== -->
+
+    <owl:ObjectProperty rdf:about="#farm_contains">
+        <rdfs:label>contains</rdfs:label>
+        <rdfs:domain rdf:resource="#WindFarm"/>
+        <rdfs:range rdf:resource="#Turbine"/>
+        <rdfs:comment>Turbines installed in this wind farm</rdfs:comment>
+        <ont:cardinality>one-to-many</ont:cardinality>
+        <ont:fromEntityId>WindFarm</ont:fromEntityId>
+        <ont:toEntityId>Turbine</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#turbine_generates">
+        <rdfs:label>generates</rdfs:label>
+        <rdfs:domain rdf:resource="#Turbine"/>
+        <rdfs:range rdf:resource="#ProductionRecord"/>
+        <rdfs:comment>Energy production records from this turbine</rdfs:comment>
+        <ont:cardinality>one-to-many</ont:cardinality>
+        <ont:fromEntityId>Turbine</ont:fromEntityId>
+        <ont:toEntityId>ProductionRecord</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#farm_has_assessment">
+        <rdfs:label>has_assessment</rdfs:label>
+        <rdfs:domain rdf:resource="#WindFarm"/>
+        <rdfs:range rdf:resource="#EnvironmentalAssessment"/>
+        <rdfs:comment>Environmental assessments for this wind farm</rdfs:comment>
+        <ont:cardinality>one-to-many</ont:cardinality>
+        <ont:fromEntityId>WindFarm</ont:fromEntityId>
+        <ont:toEntityId>EnvironmentalAssessment</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#farm_delivers_through">
+        <rdfs:label>delivers_through</rdfs:label>
+        <rdfs:domain rdf:resource="#WindFarm"/>
+        <rdfs:range rdf:resource="#GridConnection"/>
+        <rdfs:comment>Grid connection for power delivery</rdfs:comment>
+        <ont:cardinality>one-to-one</ont:cardinality>
+        <ont:fromEntityId>WindFarm</ont:fromEntityId>
+        <ont:toEntityId>GridConnection</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#grid_transmits">
+        <rdfs:label>transmits</rdfs:label>
+        <rdfs:domain rdf:resource="#GridConnection"/>
+        <rdfs:range rdf:resource="#ProductionRecord"/>
+        <rdfs:comment>Production records transmitted through this connection</rdfs:comment>
+        <ont:cardinality>one-to-many</ont:cardinality>
+        <ont:fromEntityId>GridConnection</ont:fromEntityId>
+        <ont:toEntityId>ProductionRecord</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#turbine_has_generator">
+        <rdfs:label>has_generator</rdfs:label>
+        <rdfs:domain rdf:resource="#Turbine"/>
+        <rdfs:range rdf:resource="#Generator"/>
+        <rdfs:comment>The electrical generator installed in this turbine</rdfs:comment>
+        <ont:cardinality>one-to-one</ont:cardinality>
+        <ont:fromEntityId>Turbine</ont:fromEntityId>
+        <ont:toEntityId>Generator</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#generator_has_bearing">
+        <rdfs:label>has_bearing</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="#Bearing"/>
+        <rdfs:comment>Mechanical bearings supporting the generator shaft</rdfs:comment>
+        <ont:cardinality>one-to-many</ont:cardinality>
+        <ont:fromEntityId>Generator</ont:fromEntityId>
+        <ont:toEntityId>Bearing</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#generator_monitored_by">
+        <rdfs:label>monitored_by</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="#SensorSignal"/>
+        <rdfs:comment>SCADA sensor signals monitoring this generator</rdfs:comment>
+        <ont:cardinality>one-to-many</ont:cardinality>
+        <ont:fromEntityId>Generator</ont:fromEntityId>
+        <ont:toEntityId>SensorSignal</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#generator_has_work_order">
+        <rdfs:label>has_work_order</rdfs:label>
+        <rdfs:domain rdf:resource="#Generator"/>
+        <rdfs:range rdf:resource="#WorkOrder"/>
+        <rdfs:comment>Maintenance work orders raised for this generator</rdfs:comment>
+        <ont:cardinality>one-to-many</ont:cardinality>
+        <ont:fromEntityId>Generator</ont:fromEntityId>
+        <ont:toEntityId>WorkOrder</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#policy_applies_to">
+        <rdfs:label>applies_to</rdfs:label>
+        <rdfs:domain rdf:resource="#MaintenancePolicy"/>
+        <rdfs:range rdf:resource="#Generator"/>
+        <rdfs:comment>The generator component this maintenance policy governs</rdfs:comment>
+        <ont:cardinality>many-to-many</ont:cardinality>
+        <ont:fromEntityId>MaintenancePolicy</ont:fromEntityId>
+        <ont:toEntityId>Generator</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <!-- ======================== -->
+    <!-- Object Properties (inherited – Step 5) -->
+    <!-- ======================== -->
+
+    <owl:ObjectProperty rdf:about="#window_available_for">
+        <rdfs:label>available_for</rdfs:label>
+        <rdfs:domain rdf:resource="#WeatherWindow"/>
+        <rdfs:range rdf:resource="#WindFarm"/>
+        <rdfs:comment>Wind farm this weather window applies to</rdfs:comment>
+        <ont:cardinality>many-to-one</ont:cardinality>
+        <ont:fromEntityId>WeatherWindow</ont:fromEntityId>
+        <ont:toEntityId>WindFarm</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#shift_assigned_to">
+        <rdfs:label>assigned_to</rdfs:label>
+        <rdfs:domain rdf:resource="#CrewShift"/>
+        <rdfs:range rdf:resource="#ScheduleSlot"/>
+        <rdfs:comment>Schedule slots this crew shift is assigned to</rdfs:comment>
+        <ont:cardinality>one-to-many</ont:cardinality>
+        <ont:fromEntityId>CrewShift</ont:fromEntityId>
+        <ont:toEntityId>ScheduleSlot</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#slot_plans">
+        <rdfs:label>plans</rdfs:label>
+        <rdfs:domain rdf:resource="#ScheduleSlot"/>
+        <rdfs:range rdf:resource="#WorkOrder"/>
+        <rdfs:comment>Work order planned for this schedule slot</rdfs:comment>
+        <ont:cardinality>many-to-one</ont:cardinality>
+        <ont:fromEntityId>ScheduleSlot</ont:fromEntityId>
+        <ont:toEntityId>WorkOrder</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#slot_requires_window">
+        <rdfs:label>requires_window</rdfs:label>
+        <rdfs:domain rdf:resource="#ScheduleSlot"/>
+        <rdfs:range rdf:resource="#WeatherWindow"/>
+        <rdfs:comment>Weather window required for this schedule slot</rdfs:comment>
+        <ont:cardinality>many-to-one</ont:cardinality>
+        <ont:fromEntityId>ScheduleSlot</ont:fromEntityId>
+        <ont:toEntityId>WeatherWindow</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#failure_mode_of">
+        <rdfs:label>failure_mode_of</rdfs:label>
+        <rdfs:domain rdf:resource="#FailureMode"/>
+        <rdfs:range rdf:resource="#Generator"/>
+        <rdfs:comment>Generator component this failure mode applies to</rdfs:comment>
+        <ont:cardinality>many-to-one</ont:cardinality>
+        <ont:fromEntityId>FailureMode</ont:fromEntityId>
+        <ont:toEntityId>Generator</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#alert_triggered_by">
+        <rdfs:label>triggered_by</rdfs:label>
+        <rdfs:domain rdf:resource="#FleetAlert"/>
+        <rdfs:range rdf:resource="#FailureMode"/>
+        <rdfs:comment>Failure mode that triggered this fleet alert</rdfs:comment>
+        <ont:cardinality>many-to-one</ont:cardinality>
+        <ont:fromEntityId>FleetAlert</ont:fromEntityId>
+        <ont:toEntityId>FailureMode</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#alert_targets">
+        <rdfs:label>targets</rdfs:label>
+        <rdfs:domain rdf:resource="#FleetAlert"/>
+        <rdfs:range rdf:resource="#Turbine"/>
+        <rdfs:comment>Turbines affected by this fleet alert</rdfs:comment>
+        <ont:cardinality>many-to-many</ont:cardinality>
+        <ont:fromEntityId>FleetAlert</ont:fromEntityId>
+        <ont:toEntityId>Turbine</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#hse_governs">
+        <rdfs:label>governs</rdfs:label>
+        <rdfs:domain rdf:resource="#HSEPolicy"/>
+        <rdfs:range rdf:resource="#ScheduleSlot"/>
+        <rdfs:comment>Schedule slots governed by this HSE policy</rdfs:comment>
+        <ont:cardinality>many-to-many</ont:cardinality>
+        <ont:fromEntityId>HSEPolicy</ont:fromEntityId>
+        <ont:toEntityId>ScheduleSlot</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <!-- ======================== -->
+    <!-- Object Properties (new – Step 6) -->
+    <!-- ======================== -->
+
+    <owl:ObjectProperty rdf:about="#warranty_covers">
+        <rdfs:label>covers</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyContract"/>
+        <rdfs:range rdf:resource="#Generator"/>
+        <rdfs:comment>Generators covered by this warranty</rdfs:comment>
+        <ont:cardinality>one-to-many</ont:cardinality>
+        <ont:fromEntityId>WarrantyContract</ont:fromEntityId>
+        <ont:toEntityId>Generator</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#claim_under">
+        <rdfs:label>under</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyClaim"/>
+        <rdfs:range rdf:resource="#WarrantyContract"/>
+        <rdfs:comment>Warranty contract this claim falls under</rdfs:comment>
+        <ont:cardinality>many-to-one</ont:cardinality>
+        <ont:fromEntityId>WarrantyClaim</ont:fromEntityId>
+        <ont:toEntityId>WarrantyContract</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#claim_references">
+        <rdfs:label>references</rdfs:label>
+        <rdfs:domain rdf:resource="#WarrantyClaim"/>
+        <rdfs:range rdf:resource="#WorkOrder"/>
+        <rdfs:comment>Work order providing evidence for this claim</rdfs:comment>
+        <ont:cardinality>many-to-one</ont:cardinality>
+        <ont:fromEntityId>WarrantyClaim</ont:fromEntityId>
+        <ont:toEntityId>WorkOrder</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#bulletin_applies_to">
+        <rdfs:label>applies_to</rdfs:label>
+        <rdfs:domain rdf:resource="#OEMBulletin"/>
+        <rdfs:range rdf:resource="#Generator"/>
+        <rdfs:comment>Generators affected by this OEM bulletin</rdfs:comment>
+        <ont:cardinality>many-to-many</ont:cardinality>
+        <ont:fromEntityId>OEMBulletin</ont:fromEntityId>
+        <ont:toEntityId>Generator</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#scenario_evaluates">
+        <rdfs:label>evaluates</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="#WorkOrder"/>
+        <rdfs:comment>Work order being evaluated by this scenario</rdfs:comment>
+        <ont:cardinality>many-to-one</ont:cardinality>
+        <ont:fromEntityId>FinancialScenario</ont:fromEntityId>
+        <ont:toEntityId>WorkOrder</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#scenario_uses_costs">
+        <rdfs:label>uses_costs</rdfs:label>
+        <rdfs:domain rdf:resource="#FinancialScenario"/>
+        <rdfs:range rdf:resource="#CostTable"/>
+        <rdfs:comment>Cost items used in this scenario calculation</rdfs:comment>
+        <ont:cardinality>many-to-many</ont:cardinality>
+        <ont:fromEntityId>FinancialScenario</ont:fromEntityId>
+        <ont:toEntityId>CostTable</ont:toEntityId>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#baseline_for_turbine">
+        <rdfs:label>for_turbine</rdfs:label>
+        <rdfs:domain rdf:resource="#AEPBaseline"/>
+        <rdfs:range rdf:resource="#Turbine"/>
+        <rdfs:comment>Turbine this AEP baseline belongs to</rdfs:comment>
+        <ont:cardinality>many-to-one</ont:cardinality>
+        <ont:fromEntityId>AEPBaseline</ont:fromEntityId>
+        <ont:toEntityId>Turbine</ont:toEntityId>
+    </owl:ObjectProperty>
+
+</rdf:RDF>

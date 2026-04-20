@@ -757,7 +757,7 @@ function cyStyles(colors: { nodeText: string; edgeColor: string; edgeText: strin
         'text-valign': 'bottom' as const,
         'text-halign': 'center' as const,
         'font-size': '11px',
-        'font-family': 'Segoe UI, sans-serif',
+        'font-family': 'Vattenfall Hall, Helvetica, sans-serif',
         'font-weight': 600,
         color: colors.nodeText,
         'text-margin-y': 6,
@@ -782,7 +782,7 @@ function cyStyles(colors: { nodeText: string; edgeColor: string; edgeText: strin
       style: {
         label: 'data(label)',
         'font-size': '9px',
-        'font-family': 'Segoe UI, sans-serif',
+        'font-family': 'Vattenfall Hall, Helvetica, sans-serif',
         color: colors.edgeText,
         'text-rotation': 'autorotate' as const,
         'text-margin-y': -12,
@@ -912,7 +912,7 @@ function renderEmbedSlot(
 
   // ── Title bar ──────────────────────────────────────────────────
   const titleBar = document.createElement('div');
-  titleBar.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 12px;font:600 13px/1 'Segoe UI',sans-serif;color:${darkMode ? '#B3B3B3' : '#444'};border-bottom:1px solid ${borderColor};background:${darkMode ? '#252526' : '#F3F3F3'};flex-shrink:0`;
+  titleBar.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 12px;font:600 13px/1 'Vattenfall Hall',Helvetica,sans-serif;color:${darkMode ? '#A8BFDB' : '#4A5568'};border-bottom:1px solid ${borderColor};background:${darkMode ? '#1A2540' : '#F5F7FA'};flex-shrink:0`;
 
   const titleText = document.createElement('span');
   titleText.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
@@ -922,7 +922,7 @@ function renderEmbedSlot(
   // Legend dot
   if (hasNew) {
     const legend = document.createElement('span');
-    legend.style.cssText = `display:inline-flex;align-items:center;gap:5px;font:500 11px/1 'Segoe UI',sans-serif;color:${newHighlight};white-space:nowrap`;
+    legend.style.cssText = `display:inline-flex;align-items:center;gap:5px;font:500 11px/1 'Vattenfall Hall',Helvetica,sans-serif;color:${newHighlight};white-space:nowrap`;
     const dot = document.createElement('span');
     dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:${newHighlight};display:inline-block;flex-shrink:0`;
     legend.appendChild(dot);
@@ -956,7 +956,7 @@ function renderEmbedSlot(
     const makeTgl = (label: string, value: 'before' | 'after') => {
       const btn = document.createElement('button');
       btn.textContent = label;
-      btn.style.cssText = `border:none;padding:3px 10px;font:500 11px/1 'Segoe UI',sans-serif;cursor:pointer;transition:background .15s,color .15s`;
+      btn.style.cssText = `border:none;padding:3px 10px;font:500 11px/1 'Vattenfall Hall',Helvetica,sans-serif;cursor:pointer;transition:background .15s,color .15s`;
       btn.addEventListener('click', () => {
         if (activeView === value) return;
         activeView = value;
@@ -1023,7 +1023,7 @@ function renderEmbedSlot(
 
   function updateToggleStyles() {
     if (!beforeBtn || !afterBtn) return;
-    const activeBg = '#0078D4';
+    const activeBg = '#0066B3';
     const inactiveBg = darkMode ? '#2D2D2D' : '#FFFFFF';
     const activeCol = '#FFFFFF';
     const inactiveCol = darkMode ? '#888' : '#666';

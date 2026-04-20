@@ -167,8 +167,8 @@ function nextRelationshipId(name: string): string {
 // ─── Default palette ─────────────────────────────────────────────────────────
 
 export const ENTITY_COLORS = [
-  '#0078D4', '#107C10', '#D83B01', '#5C2D91',
-  '#00A9E0', '#FFB900', '#E81123', '#008272',
+  '#0066B3', '#107C10', '#D83B01', '#5C2D91',
+  '#00A9E0', '#FFD100', '#E81123', '#008272',
 ];
 
 export const ENTITY_ICONS = [

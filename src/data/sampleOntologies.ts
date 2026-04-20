@@ -20,7 +20,7 @@ const ecommerceOntology: Ontology = {
       name: "Buyer",
       description: "Registered customer who makes purchases",
       icon: "🛒",
-      color: "#0078D4",
+      color: "#0066B3",
       properties: [
         { name: "buyerId", type: "string", isIdentifier: true },
         { name: "email", type: "string" },
@@ -48,7 +48,7 @@ const ecommerceOntology: Ontology = {
       name: "Shopping-Cart",
       description: "Active shopping session",
       icon: "🛍️",
-      color: "#FFB900",
+      color: "#FFD100",
       properties: [
         { name: "cartId", type: "string", isIdentifier: true },
         { name: "createdAt", type: "datetime" },
@@ -105,7 +105,7 @@ const healthcareOntology: Ontology = {
       name: "Patient",
       description: "Individual receiving medical care",
       icon: "🏥",
-      color: "#0078D4",
+      color: "#0066B3",
       properties: [
         { name: "patientId", type: "string", isIdentifier: true },
         { name: "mrn", type: "string" },
@@ -133,7 +133,7 @@ const healthcareOntology: Ontology = {
       name: "Appointment",
       description: "Scheduled patient visit",
       icon: "📅",
-      color: "#FFB900",
+      color: "#FFD100",
       properties: [
         { name: "appointmentId", type: "string", isIdentifier: true },
         { name: "scheduledTime", type: "datetime" },
@@ -191,7 +191,7 @@ const financeOntology: Ontology = {
       name: "Customer",
       description: "Bank account holder",
       icon: "👤",
-      color: "#0078D4",
+      color: "#0066B3",
       properties: [
         { name: "customerId", type: "string", isIdentifier: true },
         { name: "name", type: "string" },
@@ -219,7 +219,7 @@ const financeOntology: Ontology = {
       name: "Transaction",
       description: "Financial transaction",
       icon: "💳",
-      color: "#FFB900",
+      color: "#FFD100",
       properties: [
         { name: "transactionId", type: "string", isIdentifier: true },
         { name: "amount", type: "decimal", unit: "USD" },
@@ -277,7 +277,7 @@ const manufacturingOntology: Ontology = {
       name: "Machine",
       description: "Production equipment",
       icon: "🏭",
-      color: "#0078D4",
+      color: "#0066B3",
       properties: [
         { name: "machineId", type: "string", isIdentifier: true },
         { name: "model", type: "string" },
@@ -305,7 +305,7 @@ const manufacturingOntology: Ontology = {
       name: "Work-Order",
       description: "Production job",
       icon: "📋",
-      color: "#FFB900",
+      color: "#FFD100",
       properties: [
         { name: "workOrderId", type: "string", isIdentifier: true },
         { name: "product", type: "string" },
@@ -362,7 +362,7 @@ const universityOntology: Ontology = {
       name: "Student",
       description: "Enrolled learner",
       icon: "🎓",
-      color: "#0078D4",
+      color: "#0066B3",
       properties: [
         { name: "studentId", type: "string", isIdentifier: true },
         { name: "name", type: "string" },
@@ -390,7 +390,7 @@ const universityOntology: Ontology = {
       name: "Course",
       description: "Academic class",
       icon: "📚",
-      color: "#FFB900",
+      color: "#FFD100",
       properties: [
         { name: "courseCode", type: "string", isIdentifier: true },
         { name: "title", type: "string" },
@@ -494,10 +494,10 @@ export const categoryLabels: Record<string, string> = {
 };
 
 export const categoryColors: Record<string, string> = {
-  retail: "#0078D4",
+  retail: "#0066B3",
   healthcare: "#D13438",
   finance: "#107C10",
-  manufacturing: "#FFB900",
+  manufacturing: "#FFD100",
   education: "#8764B8",
   'iq-lab': "#0099BC"
 };

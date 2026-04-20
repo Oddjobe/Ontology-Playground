@@ -1,0 +1,8 @@
+{
+  "name": "Wind Power — Step 5: Scheduling & Fleet Intelligence",
+  "description": "WeatherWindow, CrewShift, ScheduleSlot, FailureMode (FMECA), FleetAlert, and HSEPolicy for repair planning and cross-fleet learning",
+  "icon": "🌊",
+  "category": "energy",
+  "tags": ["energy", "wind-power", "scheduling", "FMECA", "fleet-intelligence", "weather"],
+  "author": "ontology-quest"
+}

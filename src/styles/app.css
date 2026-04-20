@@ -1,40 +1,69 @@
-/* Microsoft Fluent Design System inspired styles */
+/* Vattenfall-inspired design styles */
+
+@font-face {
+  font-family: 'Vattenfall Hall';
+  font-weight: 300;
+  font-style: normal;
+  src: url('https://elements.vattenfall.se/fonts/VattenfallHall-Light.woff2') format('woff2'),
+       url('https://elements.vattenfall.se/fonts/VattenfallHall-Light.woff') format('woff');
+}
+@font-face {
+  font-family: 'Vattenfall Hall';
+  font-weight: 400;
+  font-style: normal;
+  src: url('https://elements.vattenfall.se/fonts/VattenfallHall-Regular.woff2') format('woff2'),
+       url('https://elements.vattenfall.se/fonts/VattenfallHall-Regular.woff') format('woff');
+}
+@font-face {
+  font-family: 'Vattenfall Hall';
+  font-weight: 500;
+  font-style: normal;
+  src: url('https://elements.vattenfall.se/fonts/VattenfallHall-Medium.woff2') format('woff2'),
+       url('https://elements.vattenfall.se/fonts/VattenfallHall-Medium.woff') format('woff');
+}
+@font-face {
+  font-family: 'Vattenfall Hall';
+  font-weight: 600;
+  font-style: normal;
+  src: url('https://elements.vattenfall.se/fonts/VattenfallHall-Bold.woff2') format('woff2'),
+       url('https://elements.vattenfall.se/fonts/VattenfallHall-Bold.woff') format('woff');
+}
 
 :root {
-  /* Microsoft Brand Colors */
-  --ms-blue: #0078D4;
-  --ms-blue-dark: #106EBE;
+  /* Vattenfall Brand Colors */
+  --ms-blue: #0066B3;
+  --ms-blue-dark: #004C8C;
   --ms-blue-light: #2B88D8;
-  --ms-green: #107C10;
-  --ms-green-light: #159118;
-  --ms-yellow: #FFB900;
-  --ms-orange: #D83B01;
-  --ms-purple: #5C2D91;
-  --ms-cyan: #00A9E0;
-  --ms-red: #E81123;
+  --ms-green: #1D8348;
+  --ms-green-light: #27AE60;
+  --ms-yellow: #FFD100;
+  --ms-orange: #E67E22;
+  --ms-purple: #4A6FA5;
+  --ms-cyan: #2980B9;
+  --ms-red: #C0392B;
   
-  /* Dark Theme */
-  --bg-primary: #1B1B1B;
-  --bg-secondary: #2D2D2D;
-  --bg-tertiary: #3D3D3D;
-  --bg-elevated: #323232;
-  --text-primary: #FFFFFF;
-  --text-secondary: #B3B3B3;
-  --text-tertiary: #808080;
-  --border-color: #404040;
-  --border-subtle: #333333;
+  /* Dark Theme — Vattenfall navy tones */
+  --bg-primary: #121A2B;
+  --bg-secondary: #1A2540;
+  --bg-tertiary: #243052;
+  --bg-elevated: #1E2D4A;
+  --text-primary: #F0F4F8;
+  --text-secondary: #A8BFDB;
+  --text-tertiary: #6B87A8;
+  --border-color: #2A3E5C;
+  --border-subtle: #1F3350;
   
   /* Semantic Colors */
-  --success: #107C10;
-  --warning: #FFB900;
-  --error: #E81123;
-  --info: #0078D4;
+  --success: #1D8348;
+  --warning: #FFD100;
+  --error: #C0392B;
+  --info: #0066B3;
   
   /* Shadows */
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 20px rgba(0, 120, 212, 0.3);
+  --shadow-glow: 0 0 20px rgba(0, 102, 179, 0.3);
   
   /* Transitions */
   --transition-fast: 150ms ease-out;
@@ -48,48 +77,48 @@
   --radius-xl: 16px;
   
   /* Font Family */
-  --font-primary: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-primary: 'Vattenfall Hall', Helvetica, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'Cascadia Code', 'Fira Code', monospace;
   
   /* Graph-specific dark mode colors */
-  --graph-bg: #1E1E1E;
-  --graph-node-text: #B3B3B3;
-  --graph-edge-color: #505050;
-  --graph-edge-text: #808080;
+  --graph-bg: #0F1726;
+  --graph-node-text: #A8BFDB;
+  --graph-edge-color: #3A506B;
+  --graph-edge-text: #6B87A8;
   
-  /* Chess board pattern colors for dark mode - futuristic theme */
-  --chess-square-dark: rgba(20, 30, 50, 0.85);
-  --chess-square-light: rgba(30, 50, 80, 0.65);
-  --about-link-color: #9fd6ff;
-  --about-link-hover-color: #c8e8ff;
+  /* Chess board pattern colors for dark mode — Vattenfall navy */
+  --chess-square-dark: rgba(15, 23, 40, 0.85);
+  --chess-square-light: rgba(26, 37, 64, 0.65);
+  --about-link-color: #7DB8E0;
+  --about-link-hover-color: #B0D7F0;
 }
 
-/* Light Theme */
+/* Light Theme — Vattenfall clean white */
 .light-theme {
-  --bg-primary: #F5F5F5;
+  --bg-primary: #F5F7FA;
   --bg-secondary: #FFFFFF;
-  --bg-tertiary: #E8E8E8;
+  --bg-tertiary: #EBF0F5;
   --bg-elevated: #FFFFFF;
-  --text-primary: #1A1A1A;
-  --text-secondary: #444444;
-  --text-tertiary: #666666;
-  --border-color: #C0C0C0;
-  --border-subtle: #D8D8D8;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
+  --text-primary: #1A1A2E;
+  --text-secondary: #4A5568;
+  --text-tertiary: #718096;
+  --border-color: #CBD5E0;
+  --border-subtle: #E2E8F0;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.10);
   
   /* Graph-specific light mode colors */
-  --graph-bg: #FCFCFC;
-  --graph-node-text: #2A2A2A;
-  --graph-edge-color: #888888;
-  --graph-edge-text: #555555;
+  --graph-bg: #FAFBFC;
+  --graph-node-text: #2D3748;
+  --graph-edge-color: #90A4AE;
+  --graph-edge-text: #546E7A;
   
-  /* Chess board pattern colors for light mode - futuristic theme */
-  --chess-square-dark: rgba(220, 230, 245, 0.8);
-  --chess-square-light: rgba(240, 245, 255, 0.9);
-  --about-link-color: #004578;
-  --about-link-hover-color: #003a63;
+  /* Chess board pattern colors for light mode — subtle Vattenfall tones */
+  --chess-square-dark: rgba(210, 222, 240, 0.5);
+  --chess-square-light: rgba(235, 240, 250, 0.6);
+  --about-link-color: #004C8C;
+  --about-link-hover-color: #003366;
 }
 
 .about-link {
@@ -138,7 +167,7 @@ body {
   justify-content: space-between;
   padding: 0 24px;
   background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 3px solid #FFD100;
   z-index: 100;
 }
 
@@ -155,8 +184,9 @@ body {
   gap: 4px;
 }
 
-.header-logo svg {
-  width: 32px;
+.header-logo svg,
+.header-logo img {
+  width: auto;
   height: 32px;
 }
 
@@ -3068,7 +3098,7 @@ body {
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font: 500 13px/1 'Segoe UI', sans-serif;
+  font: 500 13px/1 'Vattenfall Hall', Helvetica, sans-serif;
   cursor: pointer;
   transition: border-color var(--transition-fast), background var(--transition-fast);
 }
@@ -3088,7 +3118,7 @@ body {
   flex-direction: column;
   background: #0D1117;
   color: #E6E6E6;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Vattenfall Hall', Helvetica, sans-serif;
 }
 .presentation-overlay.light-theme {
   background: #FAFBFC;
@@ -3246,17 +3276,17 @@ body {
 }
 .presentation-progress-bar {
   height: 100%;
-  background: #0078D4;
+  background: #0066B3;
   border-radius: 2px;
   transition: width 0.3s ease;
 }
 .presentation-counter {
-  font: 500 13px/1 'Segoe UI', sans-serif;
+  font: 500 13px/1 'Vattenfall Hall', Helvetica, sans-serif;
   color: #888;
   white-space: nowrap;
 }
 .presentation-next-hint {
-  color: #0078D4;
+  color: #0066B3;
   font-weight: 400;
 }
 
@@ -3264,7 +3294,7 @@ body {
 
 /* Base styling before hydration — ensures quiz blocks are visible */
 .quiz-block {
-  border: 2px solid #0078D4;
+  border: 2px solid #0066B3;
   border-radius: 12px;
   padding: 16px;
   min-height: 50px;
@@ -3287,7 +3317,7 @@ body {
 
 /* Visible fallback before hydration */
 .quiz-fallback {
-  font: 600 1.2em/1.6 'Segoe UI', sans-serif;
+  font: 600 1.2em/1.6 'Vattenfall Hall', Helvetica, sans-serif;
   color: #8B949E;
   text-align: center;
   padding: 24px;
@@ -3301,11 +3331,11 @@ body {
 }
 .quiz-icon {
   flex-shrink: 0;
-  color: #0078D4;
+  color: #0066B3;
   margin-top: 2px;
 }
 .quiz-question {
-  font: 600 1.3em/1.4 'Segoe UI', sans-serif;
+  font: 600 1.3em/1.4 'Vattenfall Hall', Helvetica, sans-serif;
   color: #E6EDF3;
 }
 .light-theme .quiz-question {
@@ -3335,7 +3365,7 @@ body {
   background: #FFFFFF;
 }
 .quiz-option:hover:not(:disabled) {
-  border-color: #0078D4;
+  border-color: #0066B3;
   background: #0D1117;
   transform: translateX(4px);
 }
@@ -3350,7 +3380,7 @@ body {
   border-radius: 50%;
   background: #21262D;
   color: #8B949E;
-  font: 700 13px/30px 'Segoe UI', sans-serif;
+  font: 700 13px/30px 'Vattenfall Hall', Helvetica, sans-serif;
   text-align: center;
 }
 .light-theme .quiz-option-letter {
@@ -3359,7 +3389,7 @@ body {
 }
 
 .quiz-option-text {
-  font: 400 1.05em/1.4 'Segoe UI', sans-serif;
+  font: 400 1.05em/1.4 'Vattenfall Hall', Helvetica, sans-serif;
   color: #C9D1D9;
 }
 .light-theme .quiz-option-text {
@@ -3396,7 +3426,7 @@ body {
   align-items: center;
   gap: 8px;
   margin-top: 16px;
-  font: 600 1em/1 'Segoe UI', sans-serif;
+  font: 600 1em/1 'Vattenfall Hall', Helvetica, sans-serif;
   animation: slideIn 0.3s ease;
 }
 .quiz-result--correct {
@@ -3411,7 +3441,7 @@ body {
   padding: 14px 16px;
   background: #21262D;
   border-radius: 8px;
-  font: 400 0.95em/1.6 'Segoe UI', sans-serif;
+  font: 400 0.95em/1.6 'Vattenfall Hall', Helvetica, sans-serif;
   color: #8B949E;
   animation: slideIn 0.3s ease;
 }

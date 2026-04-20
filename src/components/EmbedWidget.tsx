@@ -41,16 +41,16 @@ interface ThemeTokens {
 
 const THEMES: Record<string, ThemeTokens> = {
   dark: {
-    bg: '#1B1B1B', bgSecondary: '#2D2D2D', bgTertiary: '#3D3D3D',
-    text: '#FFFFFF', textSecondary: '#B3B3B3', textTertiary: '#808080',
-    border: '#404040', accent: '#0078D4',
-    nodeText: '#B3B3B3', edgeColor: '#505050', edgeText: '#808080',
+    bg: '#121A2B', bgSecondary: '#1A2540', bgTertiary: '#243052',
+    text: '#F0F4F8', textSecondary: '#A8BFDB', textTertiary: '#6B87A8',
+    border: '#2A3E5C', accent: '#0066B3',
+    nodeText: '#A8BFDB', edgeColor: '#3A506B', edgeText: '#6B87A8',
   },
   light: {
-    bg: '#FFFFFF', bgSecondary: '#F5F5F5', bgTertiary: '#EEEEEE',
-    text: '#1A1A1A', textSecondary: '#555555', textTertiary: '#888888',
-    border: '#DDDDDD', accent: '#0078D4',
-    nodeText: '#2A2A2A', edgeColor: '#888888', edgeText: '#555555',
+    bg: '#FFFFFF', bgSecondary: '#F5F7FA', bgTertiary: '#EBF0F5',
+    text: '#1A1A2E', textSecondary: '#4A5568', textTertiary: '#718096',
+    border: '#CBD5E0', accent: '#0066B3',
+    nodeText: '#2D3748', edgeColor: '#90A4AE', edgeText: '#546E7A',
   },
 };
 
@@ -133,7 +133,7 @@ export function EmbedWidget({ config }: { config: EmbedConfig }) {
   // ─ Render ───────────────────────────────────────────────────────────────
   const containerStyle: React.CSSProperties = {
     height: config.height,
-    fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+    fontFamily: "'Vattenfall Hall', Helvetica, -apple-system, BlinkMacSystemFont, sans-serif",
     background: theme.bg,
     color: theme.text,
     border: `1px solid ${theme.border}`,
@@ -287,7 +287,7 @@ function EmbedGraph({ ontology, theme, setSelected }: EmbedGraphProps) {
           selector: 'node',
           style: {
             label: 'data(label)', 'text-valign': 'bottom', 'text-halign': 'center',
-            'font-size': '13px', 'font-family': 'Segoe UI, sans-serif', 'font-weight': 600,
+            'font-size': '13px', 'font-family': 'Vattenfall Hall, Helvetica, sans-serif', 'font-weight': 600,
             color: theme.nodeText, 'text-margin-y': 8,
             width: 60, height: 60, 'background-color': 'data(color)',
             'border-width': 2, 'border-color': 'data(color)', 'border-opacity': 0.5,
@@ -300,7 +300,7 @@ function EmbedGraph({ ontology, theme, setSelected }: EmbedGraphProps) {
         {
           selector: 'edge',
           style: {
-            label: 'data(label)', 'font-size': '11px', 'font-family': 'Segoe UI, sans-serif',
+            label: 'data(label)', 'font-size': '11px', 'font-family': 'Vattenfall Hall, Helvetica, sans-serif',
             color: theme.edgeText, 'text-rotation': 'autorotate', 'text-margin-y': -8,
             width: 2, 'line-color': theme.edgeColor, 'target-arrow-color': theme.edgeColor,
             'target-arrow-shape': 'triangle', 'curve-style': 'unbundled-bezier',

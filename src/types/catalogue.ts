@@ -29,20 +29,22 @@ export const CATEGORY_LABELS: Record<string, string> = {
   media: 'Media & Publishing',
   events: 'Events & Entertainment',
   general: 'General',
+  energy: 'Energy & Utilities',
   school: 'Ontology School: Get Started',
   fibo: 'FIBO (EDM Council)',
 };
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  retail: '#0078D4',
+  retail: '#0066B3',
   healthcare: '#D13438',
   finance: '#107C10',
-  manufacturing: '#FFB900',
+  manufacturing: '#FFD100',
   education: '#8764B8',
   food: '#E74C3C',
   media: '#9B59B6',
   events: '#00A9E0',
   general: '#6B7280',
+  energy: '#06B6D4',
   school: '#E67E22',
   fibo: '#1A5276',
 };
