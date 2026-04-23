@@ -30,7 +30,6 @@ const ONELAKE_SCOPES = [
 const DEPLOY_PENDING_KEY = 'fabric_deploy_pending';
 const DEPLOY_HASH_KEY = 'fabric_deploy_hash';
 
-let msalInstance: PublicClientApplication | null = null;
 let initPromise: Promise<PublicClientApplication> | null = null;
 let redirectAuthResult: FabricAuthResult | null = null;
 
@@ -74,7 +73,6 @@ function getInstance(): Promise<PublicClientApplication> {
         // Redirect response unavailable or failed — that's fine
       }
 
-      msalInstance = instance;
       return instance;
     })();
   }
@@ -255,7 +253,6 @@ export async function signOut(): Promise<void> {
   if (account) {
     await instance.logoutPopup({ account });
   }
-  msalInstance = null;
   initPromise = null;
 }
 

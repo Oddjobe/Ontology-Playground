@@ -17,6 +17,13 @@ npm run learn:build             # Compile content/learn/**/*.md → public/learn
 
 The CI pipeline (`.github/workflows/ci.yml`) runs: `catalogue:build` → `learn:build` → `validate` → `tsc -b` → `npm test` → `vite build`. Run this sequence locally before pushing.
 
+Tests use jsdom with a setup file at `src/test/setup.ts`. Run a single test by name pattern: `npx vitest run -t "parses OWL classes"`.
+
+```bash
+npm run hooks:install              # Enable gitleaks pre-commit hook
+npm run secrets:scan               # Scan for leaked secrets (gitleaks)
+```
+
 ## Architecture
 
 ### Two-build system
@@ -51,6 +58,10 @@ Custom hash-based router (`src/lib/router.ts`) — no React Router. Routes are p
 ### RDF round-trip pipeline
 
 `src/lib/rdf/parser.ts` converts RDF/XML (OWL) → internal `Ontology` model. `src/lib/rdf/serializer.ts` converts the model back to RDF/XML in the format Microsoft Fabric IQ expects. Round-trip fidelity is verified by `src/lib/rdf/roundtrip.test.ts`.
+
+### Fabric push (MSAL + REST API)
+
+The app can push ontologies directly to Microsoft Fabric workspaces. Authentication uses MSAL.js v5 (SPA redirect flow, tokens in `sessionStorage`). The browser calls Fabric REST APIs directly — no backend proxy. Ontology creation is async: POST returns 202, and the app polls until complete (~60–90s). Requires `VITE_FABRIC_CLIENT_ID` env var pointing to an Entra app registration with `Workspace.ReadWrite.All` and `Item.ReadWrite.All` delegated permissions.
 
 ## Key Conventions
 
@@ -95,3 +106,16 @@ This repo has Copilot skills and prompts for common ontology workflows:
 - Modal/panel components follow the pattern in `src/components/` (boolean state toggle, AnimatePresence for animation)
 - New components should be exported from `src/components/index.ts`
 - Feature-gated code uses `import.meta.env.VITE_*` flags (e.g., `VITE_ENABLE_AI_BUILDER`)
+
+### Adding a new export format
+
+1. Add the format to the `exportFormat` union type in the state
+2. Create an export function (`exportAs<Format>`)
+3. Add a format handler in `handleExport()`
+4. Add a UI button in the format selector
+
+### Adding a new component
+
+1. Create the component file in `src/components/`
+2. Export from `src/components/index.ts`
+3. Follow the existing modal/panel pattern (boolean state toggle, `AnimatePresence` for animation)
