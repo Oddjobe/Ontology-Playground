@@ -1252,7 +1252,6 @@ export async function createOntologyWithData(
   // Step 5: Upload sample data + edge tables to the temp Lakehouse and convert to Delta
   const tableEntries = Array.from(allTables.entries());
   const loadedTableNames: string[] = [];
-  let uploadFailCount = 0;
   for (let i = 0; i < tableEntries.length; i++) {
     const [entityName, instances] = tableEntries[i];
     const tableName = sanitizeName(entityName);
@@ -1261,7 +1260,6 @@ export async function createOntologyWithData(
       await uploadEntityTable(workspaceId, tmpLakehouse.id, oneLakeToken, tableName, instances, fabricToken);
       loadedTableNames.push(tableName);
     } catch (err) {
-      uploadFailCount++;
       console.warn(`Failed to upload table ${tableName}:`, err);
     }
   }

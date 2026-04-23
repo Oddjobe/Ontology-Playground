@@ -62,7 +62,7 @@ function App() {
   const [toast, setToast] = useState<{ message: string; icon: string } | null>(null);
   const [mobilePanel, setMobilePanel] = useState<'graph' | 'quests' | 'inspector' | 'query'>('graph');
   const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const { darkMode, earnedBadges, loadOntology, toggleDarkMode, currentOntology } = useAppStore();
+  const { darkMode, earnedBadges, loadOntology, toggleDarkMode } = useAppStore();
 
   // Show toast when a new badge is earned
   useEffect(() => {

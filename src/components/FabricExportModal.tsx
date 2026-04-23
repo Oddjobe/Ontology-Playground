@@ -42,7 +42,6 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
   const [mode, setMode] = useState<'create' | 'update'>('create');
   const [error, setError] = useState('');
   const [result, setResult] = useState<FabricOntologyResponse | null>(null);
-  const [loading, setLoading] = useState(false);
   const [ontologiesLoading, setOntologiesLoading] = useState(false);
   const [pollProgress, setPollProgress] = useState<PollProgress | null>(null);
   const [includeSampleData, setIncludeSampleData] = useState(true);
@@ -512,7 +511,7 @@ export function FabricExportModal({ onClose }: FabricExportModalProps) {
                 <button
                   className="btn btn-primary"
                   onClick={handlePush}
-                  disabled={loading || (mode === 'update' && !selectedOntologyId)}
+                  disabled={mode === 'update' && !selectedOntologyId}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 >
                   <Cloud size={16} />
